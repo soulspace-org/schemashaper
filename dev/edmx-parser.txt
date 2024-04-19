@@ -1,0 +1,203 @@
+;;
+;; Parse EDMX
+;;
+(defn parse-property-ref
+  "Parse PropertyRef tag."
+  [& {:keys [tag attrs content] :as args}]
+  (merge {:tag tag} attrs))
+
+(defn parse-key
+  "Parse Key tag."
+  [& {:keys [tag attrs content] :as args}]
+  (merge {:tag tag} attrs {:PropertyRef (parse-property-ref (first content))}))
+
+(defn parse-property
+  "Parse Property tag."
+  [& {:keys [tag attrs content] :as args}]
+  (merge {:tag tag} attrs))
+
+(defn parse-navigation-property
+  "Parse NavigationProperty tag."
+  [& {:keys [tag attrs content] :as args}]
+  (merge {:tag tag} attrs))
+
+(defn parse-navigation-property-binding
+  "Parse NavigationPropertyBinding tag."
+  [& {:keys [tag attrs content] :as args}]
+  (merge {:tag tag} attrs))
+
+(defn parse-function-import
+  "Parse FunctionImport tag."
+  [& {:keys [tag attrs content] :as args}]
+  (merge {:tag tag} attrs))
+
+(defn parse-entity-set-content
+  "Parse EntitySet content."
+  [& {:keys [tag attrs content] :as args}]
+  (case tag
+    :NavigationPropertyBinding (parse-navigation-property-binding args)))
+
+(defn parse-entity-set
+  "Parse EntitySet tag."
+  [& {:keys [tag attrs content] :as args}]
+  (merge {:tag tag} attrs {:ct (into [] (map parse-entity-set-content) content)}))
+
+(defn parse-entity-type-content
+  "Parse EntityType content."
+  [& {:keys [tag attrs content] :as args}]
+  (case tag
+    :Key (parse-key args)
+    :Property (parse-property args)
+    :EntitySet (parse-entity-set args)
+    :FunctionImport (parse-function-import args)
+    :NavigationProperty (parse-navigation-property args)
+    :NavigationPropertyBinding (parse-navigation-property-binding args)))
+
+(defn parse-entity-type
+  "Parse EntityType tag."
+  [& {:keys [tag attrs content] :as args}]
+  (merge {:tag tag} attrs {:ct (into [] (map parse-entity-type-content) content)}))
+
+(defn parse-entity-container-content
+  "Parse EntityContainer tag."
+  [& {:keys [tag attrs content] :as args}]
+  (case tag
+    ;
+    ))
+
+(defn parse-entity-container
+  "Parse EntityContainer tag."
+  [& {:keys [tag attrs content] :as args}]
+  (merge {:tag tag} attrs {:ct (into [] (map parse-entity-container-content) content)}))
+
+(defn parse-function
+  "Parse Function tag."
+  [& {:keys [tag attrs content] :as args}]
+  (merge {:tag tag} attrs))
+
+(defn parse-schema-content
+  "Parse Schema content."
+  [& {:keys [tag attrs content] :as args}]
+  (case tag
+    :EntityType (parse-entity-type args)
+    :EntityContainer (parse-entity-type args)
+    :Function (parse-function args)))
+
+(defn parse-schema
+  "Parse Schema tag."
+  [& {:keys [tag attrs content] :as args}]
+  (merge {:tag tag} attrs {:ct (into [] (map parse-schema-content) content)}))
+
+(defn parse-data-services-content
+  "Parse DataServices content."
+  [& {:keys [tag attrs content] :as args}]
+  (case tag
+    :Schema (parse-schema args)))
+
+(defn parse-data-services
+  "Parse DataServices tag"
+  [& {:keys [tag attrs content] :as args}]
+  (merge {:tag tag} attrs {:schemas (into [] (map parse-schema) content)}))
+
+(defn parse-edmx-content
+  "Parse Edmx content."
+  [& {:keys [tag attrs content] :as args}]
+  (case tag
+    :DataServices (parse-data-services args)))
+
+(defn parse-edmx
+  "Parse Edmx tag."
+  [& {:keys [tag attrs content] :as args}]
+  (merge {:tag tag} attrs {:data-services (into [] (map parse-edmx-content) content)}))
+
+;;
+;; EDMX accessors
+;;
+(defn schema-content
+  "Get the schema content of the edmx."
+  [edmx]
+  (get-in edmx [:data-services 0 :schemas 0 :ct]))
+
+;;
+;; build domain model
+;;
+
+(defn property->field
+  "Returns a model field for the property."
+  [{name :Name type :Type}]
+  (if-let [collection-type (collection-type type)]
+    {:el :field
+     :name name
+     :collection :list
+     :cardinality :zero-to-many
+     :type (get edmx->types collection-type collection-type)}
+    {:el :field :name name
+     :type (get edmx->types type type)}))
+
+(defn navigation-property->field
+  "Returns a model field for the navigation property."
+  [{name :Name type :Type partner :Partner}]
+  (if-let [collection-type (collection-type type)]
+    {:el :field
+     :name name
+     :collection :list
+     :cardinality :zero-to-many
+     :type (get edmx->types collection-type collection-type)}
+    {:el :field
+     :name name
+     :type (get edmx->types type type)}))
+
+(defn entity-type->class
+  "Returns a model class for the entity type."
+  [{name :Name type :Type content :ct}]
+  {:el :class
+   :id (name->id name)
+   :name name
+   :ct (concat (map property->field (filter #(= :Property (:tag %)) content))
+               (map navigation-property->field (filter #(= :NavigationProperty (:tag %)) content)))})
+
+(defn update-result
+  "Update the result based on the element e."
+  [result e]
+  (cond
+    (= :EntityType (:tag e))
+    (let [class (entity-type->class e)]
+      (assoc result
+             :elements (conj (:elements result) class)
+             :name->element (assoc (:name->element result) (:name class) class)))
+
+    (= :Property (:tag e))
+    ;(println "Property")
+    result
+
+    (= :EntitySet (:tag e))
+    ;(println "EntitySet")
+    result
+
+
+    (= :NavigationProperty (:tag e))
+    ;(println "NavigationProperty")
+    result
+
+    (= :NavigationPropertyBinding (:tag e))
+    ;(println "NavigationPropertyBinding")
+    result
+
+    (= :Key (:tag e))
+    ;(println "Key")
+    result
+
+    :else
+    (do (println "Unhandled tag" (:tag e))
+        result)))
+
+(defn ->model
+  "Step function to build the model."
+  ([]
+   {:elements []
+    :name->element {}})
+  ([result]
+   result)
+  ([result e]
+   (update-result result e)))
+

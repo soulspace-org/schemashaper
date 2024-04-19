@@ -1,0 +1,191 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<edmx:Edmx xmlns:edmx="http://schemas.microsoft.com/ado/2007/06/edmx" Version="1.0">
+    <edmx:DataServices m:DataServiceVersion="1.0"
+
+xmlns:m="http://schemas.microsoft.com/ado/2007/08/dataservices/metadata">
+        <Schema Namespace="ODataAPI" xmlns="http://schemas.microsoft.com/ado/2008/09/edm">
+            <EntityType Name="Event">
+                <Key>
+                    <PropertyRef Name="EventID"/>
+                </Key>
+                <Property Name="EventID" Type="Edm.Int64" Nullable="false"/>
+                <Property Name="Description" Type="Edm.String" Nullable="true" MaxLength="512"/>
+                <Property Name="Name" Type="Edm.String" Nullable="true" MaxLength="256"/>
+                <Property Name="Type" Type="Edm.String" Nullable="true" MaxLength="32"/>
+                <Property Name="Country" Type="Edm.String" Nullable="true" MaxLength="256"/>
+                <NavigationProperty Name="Features" Relationship="ODataAPI.Event_Feature_Many_Many0" FromRole="Event" ToRole="Feature"/>
+                <NavigationProperty Name="Sessions" Relationship="ODataAPI.Event_Session_One_Many0" FromRole="Event" ToRole="Session"/>
+                <NavigationProperty Name="Theme" Relationship="ODataAPI.Event_GlobalTheme_Many_ZeroToOne0" FromRole="Event" ToRole="GlobalTheme"/>
+                <NavigationProperty Name="Tracks" Relationship="ODataAPI.Event_Track_One_Many0" FromRole="Event" ToRole="Track"/>
+            </EntityType>
+            <EntityType Name="Session">
+                <Key>
+                    <PropertyRef Name="SessionID"/>
+                </Key>
+                <Property Name="SessionID" Type="Edm.Int64" Nullable="false"/>
+                <Property Name="Description" Type="Edm.String" Nullable="true" MaxLength="4096"/>
+                <Property Name="EventID" Type="Edm.Int64" Nullable="true"/>
+                <Property Name="Title" Type="Edm.String" Nullable="true" MaxLength="256"/>
+                <NavigationProperty Name="Track"
+Relationship="ODataAPI.Session_Track_Many_One0" FromRole="Session" ToRole="Track"/>
+                <NavigationProperty Name="Event" Relationship="ODataAPI.Session_Event_Many_ZeroToOne1" FromRole="Session" ToRole="Event"/>
+            </EntityType>
+            <EntityType Name="Track">
+                <Key>
+                    <PropertyRef Name="TrackID"/>
+                </Key>
+                <Property Name="DisplayColor" Type="Edm.String" Nullable="true" MaxLength="255"/>
+                <Property Name="EventID" Type="Edm.Int64" Nullable="true"/>
+                <Property Name="Name" Type="Edm.String" Nullable="true" MaxLength="256"/>
+                <Property Name="TrackID" Type="Edm.Int64" Nullable="false"/>
+            </EntityType>
+            <EntityType Name="User">
+                <Key>
+                    <PropertyRef Name="UserID"/>
+                </Key>
+                <Property Name="Company" Type="Edm.String" Nullable="true" MaxLength="256"/>
+                <Property Name="FirstName" Type="Edm.String" Nullable="true" MaxLength="256"/>
+                <Property Name="LastName" Type="Edm.String" Nullable="true" MaxLength="256"/>
+                <Property Name="UserID" Type="Edm.String" Nullable="false" MaxLength="256"/>
+                <NavigationProperty Name="Events" Relationship="ODataAPI.User_Event_Many_Many0" FromRole="User" ToRole="Event"/>
+            </EntityType>
+            <EntityType Name="UserSessionAgenda">
+                <Key>
+                    <PropertyRef Name="SessionID"/>
+                    <PropertyRef Name="UserID"/>
+                </Key>
+                <Property Name="EventID" Type="Edm.Int64" Nullable="true"/>
+                <Property Name="Notes" Type="Edm.String" Nullable="true" MaxLength="512"/>
+                <Property Name="Priority" Type="Edm.Int32" Nullable="true"/>
+                <Property Name="SessionID" Type="Edm.Int64" Nullable="false"/>
+                <Property Name="UserID" Type="Edm.String" Nullable="true" MaxLength="256"/>
+                <NavigationProperty Name="Session" Relationship="ODataAPI.UserSessionAgenda_Session_Many_ZeroToOne0" FromRole="UserSessionAgenda" ToRole="Session"/>
+            </EntityType>
+            <EntityType Name="Feature">
+                <Key>
+                    <PropertyRef Name="FeatureID"/>
+                </Key>
+                <Property Name="FeatureID" Type="Edm.Int64" Nullable="false"/>
+                <Property Name="Name" Type="Edm.String" Nullable="true" MaxLength="256"/>
+                <Property Name="Status" Type="Edm.String" Nullable="true" MaxLength="16"/>
+            </EntityType>
+            <EntityType Name="GlobalTheme">
+                <Key>
+                    <PropertyRef Name="ThemeID"/>
+                </Key>
+                <Property Name="DisplayName" Type="Edm.String" Nullable="true" MaxLength="128"/>
+                <Property Name="SystemTheme" Type="Edm.Boolean" Nullable="true"/>
+                <Property Name="ThemeCode" Type="Edm.String" Nullable="true" MaxLength="128"/>
+                <Property Name="ThemeID" Type="Edm.Int64" Nullable="false"/>
+            </EntityType>
+            <Association Name="Event_Session_One_Many0">
+                <End Type="ODataAPI.Event" Multiplicity="1" Role="Event"/>
+                <End Type="ODataAPI.Session" Multiplicity="*" Role="Session"/>
+                <ReferentialConstraint>
+                    <Principal Role="Event">
+                        <PropertyRef Name="EventID"/>
+                    </Principal>
+                    <Dependent Role="Session">
+                        <PropertyRef Name="EventID"/>
+                    </Dependent>
+                </ReferentialConstraint>
+            </Association>
+            <Association Name="Event_Track_One_Many0">
+                <End Type="ODataAPI.Event" Multiplicity="1" Role="Event"/>
+                <End Type="ODataAPI.Track" Multiplicity="*" Role="Track"/>
+                    <ReferentialConstraint>
+                        <Principal Role="Event">
+                            <PropertyRef Name="EventID"/>
+                        </Principal>
+                        <Dependent Role="Track">
+                            <PropertyRef Name="EventID"/>
+                        </Dependent>
+                    </ReferentialConstraint>
+            </Association>
+            <Association Name="Session_Track_Many_One0">
+                <End Type="ODataAPI.Session" Multiplicity="*" Role="Session"/>
+                <End Type="ODataAPI.Track" Multiplicity="1" Role="Track"/>
+            </Association>
+            <Association Name="Session_Event_Many_ZeroToOne1">
+                <End Type="ODataAPI.Session" Multiplicity="*" Role="Session"/>
+                <End Type="ODataAPI.Event" Multiplicity="0..1" Role="Event"/>
+                <ReferentialConstraint>
+                    <Principal Role="Event">
+                        <PropertyRef Name="EventID"/>
+                    </Principal>
+                    <Dependent Role="Session">
+                        <PropertyRef Name="EventID"/>
+                    </Dependent>
+                </ReferentialConstraint>
+            </Association>
+            <Association Name="User_Event_Many_Many0">
+                <End Type="ODataAPI.User" Multiplicity="*" Role="User"/>
+                <End Type="ODataAPI.Event" Multiplicity="*" Role="Event"/>
+            </Association>
+            <Association Name="UserSessionAgenda_Session_Many_ZeroToOne0">
+                <End Type="ODataAPI.UserSessionAgenda" Multiplicity="*" Role="UserSessionAgenda"/>
+                <End Type="ODataAPI.Session" Multiplicity="0..1" Role="Session"/>
+                <ReferentialConstraint>
+                    <Principal Role="Session">
+                        <PropertyRef Name="SessionID"/>
+                    </Principal>
+                    <Dependent Role="UserSessionAgenda">
+                        <PropertyRef Name="SessionID"/>
+                    </Dependent>
+                </ReferentialConstraint>
+            </Association>
+            <Association Name="Event_Feature_Many_Many0">
+                <End Type="ODataAPI.Event" Multiplicity="*" Role="Event"/>
+                <End Type="ODataAPI.Feature" Multiplicity="*" Role="Feature"/>
+            </Association>
+            <Association Name="Event_GlobalTheme_Many_ZeroToOne0">
+                <End Type="ODataAPI.Event" Multiplicity="*" Role="Event"/>
+                <End Type="ODataAPI.GlobalTheme" Multiplicity="0..1" Role="GlobalTheme"/>
+            </Association>
+            <EntityContainer Name="EventService" m:IsDefaultEntityContainer="true">
+                <EntitySet Name="Sessions" EntityType="ODataAPI.Session"/>
+                <EntitySet Name="Events" EntityType="ODataAPI.Event"/>
+                <EntitySet Name="Features" EntityType="ODataAPI.Feature"/>
+                <EntitySet Name="Users" EntityType="ODataAPI.User"/>
+                <EntitySet Name="UserSessionAgendas" EntityType="ODataAPI.UserSessionAgenda"/>
+                <EntitySet Name="Tracks" EntityType="ODataAPI.Track"/>
+                <EntitySet Name="GlobalThemes" EntityType="ODataAPI.GlobalTheme"/>
+                <AssociationSet Name="Event_Session_One_Many0Set" Association="ODataAPI.Event_Session_One_Many0">
+                    <End EntitySet="Events" Role="Event"/>
+                    <End EntitySet="Sessions" Role="Session"/>
+                </AssociationSet>
+                <AssociationSet Name="Session_Track_Many_One0Set" Association="ODataAPI.Session_Track_Many_One0">
+                    <End EntitySet="Sessions" Role="Session"/>
+                    <End EntitySet="Tracks" Role="Track"/>
+                </AssociationSet>
+                <AssociationSet Name="Session_Event_Many_ZeroToOne1Set" Association="ODataAPI.Session_Event_Many_ZeroToOne1">
+                    <End EntitySet="Sessions" Role="Session"/>
+                    <End EntitySet="Events" Role="Event"/>
+                </AssociationSet>
+                <AssociationSet Name="Event_Track_One_Many0Set" Association="ODataAPI.Event_Track_One_Many0">
+                    <End EntitySet="Events" Role="Event"/>
+                    <End EntitySet="Tracks" Role="Track"/>
+                </AssociationSet>
+                <AssociationSet Name="User_Event_Many_Many0Set" Association="ODataAPI.User_Event_Many_Many0">
+                    <End EntitySet="Users" Role="User"/>
+                    <End EntitySet="Events" Role="Event"/>
+                </AssociationSet>
+                <AssociationSet Name="UserSessionAgenda_Session_Many_ZeroToOne0Set" Association="ODataAPI.UserSessionAgenda_Session_Many_ZeroToOne0">
+                    <End EntitySet="UserSessionAgendas" Role="UserSessionAgenda"/>
+                    <End EntitySet="Sessions" Role="Session"/>
+                </AssociationSet>
+                <AssociationSet Name="Event_Feature_Many_Many0Set" Association="ODataAPI.Event_Feature_Many_Many0">
+                    <End EntitySet="Events" Role="Event"/>
+                    <End EntitySet="Features" Role="Feature"/>
+                </AssociationSet>
+                <AssociationSet Name="Event_GlobalTheme_Many_ZeroToOne0Set" Association="ODataAPI.Event_GlobalTheme_Many_ZeroToOne0">
+                    <End EntitySet="Events" Role="Event"/>
+                    <End EntitySet="GlobalThemes" Role="GlobalTheme"/>
+                </AssociationSet>
+                <FunctionImport Name="getSessionAttendeesCount" ReturnType="Edm.Int64" m:HttpMethod="GET">
+                    <Parameter Name="SessionID" Type="Edm.Int64" Nullable="true"/>
+                </FunctionImport>
+            </EntityContainer>
+        </Schema>
+    </edmx:DataServices>
+</edmx:Edmx>

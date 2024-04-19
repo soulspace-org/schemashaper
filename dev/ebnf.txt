@@ -1,0 +1,323 @@
+
+
+whitespace = " " | "\n" | "\r" | "\t" | "\f" | "\v" .
+comment    = line_comment | block_comment .
+
+line_comment       = "//" { !("\n" | "\x00") } .
+block_comment      = "/*"  block_comment_rest .
+block_comment_rest = "*" block_comment_tail |
+                     !("*" | "\x00") block_comment_rest .
+block_comment_tail = "/" |
+                     "*" block_comment_tail |
+                     !("*" | "/" | "\x00") block_comment_rest .
+
+letter        = "A" … "Z" | "a" … "z" | "_" .
+decimal_digit = "0" … "9" .
+octal_digit   = "0" … "7" .
+hex_digit     = "0" … "9" | "A" … "F" | "a" … "f" .
+
+byte_order_mark = "\xEF\xBB\xBF" .
+
+identifier = letter { letter | decimal_digit } .
+
+syntax  = "syntax" .
+import  = "import" .
+weak    = "weak" .
+public  = "public" . 
+package = "package" .
+option  = "option" .
+inf     = "inf" .
+nan     = "nan" .
+message = "message" .
+enum    = "enum" .
+service = "service" .
+extend  = "extend" .
+group   = "group" .
+oneof   = "oneof" .
+extensions = "extensions" .
+reserved   = "reserved" .
+rpc        = "rpc" .
+stream     = "stream" .
+returns    = "returns" .
+to         = "to" .
+max        = "max" .
+map        = "map" .
+repeated   = "repeated" .
+optional   = "optional" .
+required   = "required" .
+string     = "string" .
+bytes      = "bytes" .
+int32    = "int32" .
+int64    = "int64" .
+uint32   = "uint32" .
+uint64   = "uint64" .
+sint32   = "sint32" .
+sint64   = "sint64" .
+fixed32  = "fixed32" .
+fixed64  = "fixed64" .
+sfixed32 = "sfixed32" .
+sfixed64 = "sfixed64" .
+bool     = "bool" .
+float    = "float" .
+double   = "double" .
+
+numeric_literal = [ "." ] decimal_digit { digit_point_or_exp } .
+
+digit_point_or_exp = "." | decimal_digit | ( "e" | "E" ) [ "+" | "-" ] | letter .
+
+int_literal = decimal_literal | octal_literal | hex_literal .
+
+decimal_literal = "0" | ( "1" … "9" ) [ decimal_digits ] .
+octal_literal   = "0" octal_digits .
+hex_literal     = "0" ( "x" | "X" ) hex_digits .
+decimal_digits  = decimal_digit { decimal_digit } .
+octal_digits    = octal_digit { octal_digit } .
+hex_digits      = hex_digit { hex_digit } .
+
+float_literal = decimal_digits "." [ decimal_digits ] [ decimal_exponent ] |
+                decimal_digits decimal_exponent |
+                "." decimal_digits [ decimal_exponent ] .
+
+decimal_exponent  = ( "e" | "E" ) [ "+" | "-" ] decimal_digits .
+
+string_literal = single_quoted_string_literal | double_quoted_string_literal .
+
+single_quoted_string_literal = "'" { !("\n" | "\x00" | "'" | `\`) | rune_escape_seq } "'" .
+double_quoted_string_literal = `"` { !("\n" | "\x00" | `"` | `\`) | rune_escape_seq } `"` .
+
+rune_escape_seq    = simple_escape_seq | hex_escape_seq | octal_escape_seq | unicode_escape_seq .
+simple_escape_seq  = `\` ( "a" | "b" | "f" | "n" | "r" | "t" | "v" | `\` | "'" | `"` | "?" ) .
+hex_escape_seq     = `\` ( "x" | "X" ) hex_digit [ hex_digit ] .
+octal_escape_seq   = `\` octal_digit [ octal_digit [ octal_digit ] ] .
+unicode_escape_seq = `\` "u" hex_digit hex_digit hex_digit hex_digit |
+                     `\` "U" hex_digit hex_digit hex_digit hex_digit
+                             hex_digit hex_digit hex_digit hex_digit .
+
+semicolon = ";" .
+comma     = "," .
+dot       = "." .
+slash     = "/" .
+colon     = ":" .
+equals    = "=" .
+minus     = "-" .
+r_paren   = ")" .
+l_paren   = "(" .
+l_brace   = "{" .
+r_brace   = "}" .
+l_bracket = "[" .
+r_bracket = "]" .
+l_angle   = "<" .
+r_angle   = ">" .
+
+
+File = [ byte_order_mark ] [ SyntaxDecl ] { FileElement } .
+
+FileElement = ImportDecl |
+              PackageDecl |
+              OptionDecl |
+              MessageDecl |
+              EnumDecl |
+              ExtensionDecl |
+              ServiceDecl |
+              EmptyDecl .
+SyntaxDecl = syntax equals SyntaxLevel semicolon .
+
+SyntaxLevel = StringLiteral .
+
+StringLiteral = string_literal { string_literal } .
+
+PackageDecl = package PackageName semicolon .
+
+PackageName = QualifiedIdentifier .
+
+ImportDecl = import [ weak | public ] ImportedFileName semicolon .
+
+ImportedFileName = StringLiteral .
+
+TypeName = [ dot ] QualifiedIdentifier .
+
+QualifiedIdentifier = identifier { dot identifier } .
+
+FieldDeclTypeName          = FieldDeclIdentifier [ dot QualifiedIdentifier ] |
+                             FullyQualifiedIdentifier .
+MessageFieldDeclTypeName   = MessageFieldDeclIdentifier [ dot QualifiedIdentifier ] |
+                             FullyQualifiedIdentifier .
+ExtensionFieldDeclTypeName = ExtensionFieldDeclIdentifier [ dot QualifiedIdentifier ] |
+                             FullyQualifiedIdentifier .
+OneofFieldDeclTypeName     = OneofFieldDeclIdentifier [ dot QualifiedIdentifier ] |
+                             FullyQualifiedIdentifier .
+MethodDeclTypeName         = MethodDeclIdentifier [ dot QualifiedIdentifier ] |
+                             FullyQualifiedIdentifier .
+
+FieldDeclIdentifier          = identifier - group .
+MessageFieldDeclIdentifier   = FieldDeclIdentifier - (
+                                 message | enum   | oneof    | reserved | extensions |
+                                 extend  | option | optional | required | repeated
+                               ) .
+ExtensionFieldDeclIdentifier = FieldDeclIdentifier - (
+                                 optional | required | repeated
+                               ) .
+OneofFieldDeclIdentifier     = FieldDeclIdentifier - (
+                                 option | optional | required | repeated
+                               ) .
+MethodDeclIdentifier         = identifier - stream .
+
+FullyQualifiedIdentifier = dot QualifiedIdentifier .
+
+OptionDecl = option OptionName equals OptionValue semicolon .
+
+CompactOptions = l_bracket CompactOption { comma CompactOption } r_bracket .
+
+CompactOption  = OptionName equals OptionValue .
+
+OptionName = ( SimpleName | ExtensionName ) [ dot OptionName ] .
+
+SimpleName    = identifier .
+ExtensionName = l_paren TypeName r_paren .
+
+OptionValue = ScalarValue | MessageLiteralWithBraces .
+
+ScalarValue         = StringLiteral | IntLiteral | FloatLiteral |
+                      SpecialFloatLiteral | identifier .
+IntLiteral          = [ minus ] int_literal .
+FloatLiteral        = [ minus ] float_literal .
+SpecialFloatLiteral = minus inf | minus nan .
+
+MessageLiteralWithBraces = l_brace MessageTextFormat r_brace .
+
+MessageTextFormat = { MessageLiteralField [ comma | semicolon ] } .
+
+MessageLiteralField = MessageLiteralFieldName colon Value |
+                      MessageLiteralFieldName MessageValue .
+
+MessageLiteralFieldName = FieldName |
+                          l_bracket SpecialFieldName r_bracket .
+SpecialFieldName        = ExtensionFieldName | TypeURL .
+ExtensionFieldName      = QualifiedIdentifier .
+TypeURL                 = QualifiedIdentifier slash QualifiedIdentifier .
+
+Value                  = TextFormatScalarValue | MessageLiteral | ListLiteral .
+TextFormatScalarValue  = StringLiteral | IntLiteral | FloatLiteral |
+                         SignedIdentifier | identifier .
+SignedIdentifier       = minus identifier .
+MessageValue           = MessageLiteral | ListOfMessagesLiteral .
+MessageLiteral         = MessageLiteralWithBraces |
+                         l_angle MessageTextFormat r_angle .
+
+ListLiteral = l_bracket [ ListElement { comma ListElement } ] r_bracket .
+ListElement = ScalarValue | MessageLiteral .
+
+ListOfMessagesLiteral = l_bracket [ MessageLiteral { comma MessageLiteral } ] r_bracket .
+
+MessageDecl = message MessageName l_brace { MessageElement } r_brace .
+
+MessageName    = identifier .
+MessageElement = MessageFieldDecl |
+                 MapFieldDecl |
+                 GroupDecl |
+                 OneofDecl |
+                 OptionDecl |
+                 ExtensionRangeDecl |
+                 MessageReservedDecl |
+                 MessageDecl |
+                 EnumDecl |
+                 ExtensionDecl |
+                 EmptyDecl .
+
+MessageFieldDecl = FieldDeclWithCardinality |
+                   MessageFieldDeclTypeName FieldName equals FieldNumber
+                       [ CompactOptions ] semicolon .
+
+FieldDeclWithCardinality = FieldCardinality FieldDeclTypeName FieldName
+                           equals FieldNumber [ CompactOptions ] semicolon .
+
+FieldCardinality = required | optional | repeated .
+FieldName        = identifier .
+FieldNumber      = int_literal .
+
+MapFieldDecl = MapType FieldName equals FieldNumber [ CompactOptions ] semicolon .
+
+MapType      = map l_angle MapKeyType comma MapValueType r_angle .
+MapKeyType   = int32   | int64   | uint32   | uint64   | sint32 | sint64 |
+               fixed32 | fixed64 | sfixed32 | sfixed64 | bool   | string .
+MapValueType = TypeName .
+
+GroupDecl = FieldCardinality group FieldName equals FieldNumber
+            [ CompactOptions ] l_brace { MessageElement } r_brace .
+
+OneofDecl = oneof OneofName l_brace { OneofElement } r_brace .
+
+OneofName    = identifier .
+OneofElement = OptionDecl |
+               OneofFieldDecl |
+               OneofGroupDecl .
+
+OneofFieldDecl = OneofFieldDeclTypeName FieldName equals FieldNumber
+                 [ CompactOptions ] semicolon .
+
+OneofGroupDecl = group FieldName equals FieldNumber
+                 [ CompactOptions ] l_brace { MessageElement } r_brace .
+
+ExtensionRangeDecl = extensions TagRanges [ CompactOptions ] semicolon .
+
+TagRanges     = TagRange { comma TagRange } .
+TagRange      = TagRangeStart [ to TagRangeEnd ] .
+TagRangeStart = FieldNumber .
+TagRangeEnd   = FieldNumber | max .
+
+MessageReservedDecl = reserved ( TagRanges | Names ) semicolon .
+
+Names = StringLiteral { comma StringLiteral } .
+
+EnumDecl = enum EnumName l_brace { EnumElement } r_brace .
+
+EnumName    = identifier .
+EnumElement = OptionDecl |
+              EnumValueDecl |
+              EnumReservedDecl |
+              EmptyDecl .
+
+EnumValueDecl = EnumValueName equals EnumValueNumber [ CompactOptions ] semicolon .
+
+EnumValueName   = identifier  - ( option | reserved ) .
+EnumValueNumber = [ minus ] int_literal .
+
+EnumReservedDecl = reserved ( EnumValueRanges | Names ) semicolon .
+
+EnumValueRanges     = EnumValueRange { comma EnumValueRange } .
+EnumValueRange      = EnumValueRangeStart [ to EnumValueRangeEnd ] .
+EnumValueRangeStart = EnumValueNumber .
+EnumValueRangeEnd   = EnumValueNumber | max .
+
+ExtensionDecl = extend ExtendedMessage l_brace { ExtensionElement } r_brace .
+
+ExtendedMessage  = TypeName .
+ExtensionElement = ExtensionFieldDecl |
+                   GroupDecl .
+
+ExtensionFieldDecl = FieldDeclWithCardinality |
+                     ExtensionFieldDeclTypeName FieldName equals FieldNumber
+                         [ CompactOptions ] semicolon .
+
+ServiceDecl = service ServiceName l_brace { ServiceElement } r_brace .
+
+ServiceName    = identifier .
+ServiceElement = OptionDecl |
+                 MethodDecl |
+                 EmptyDecl .
+
+MethodDecl = rpc MethodName InputType returns OutputType semicolon |
+             rpc MethodName InputType returns OutputType l_brace { MethodElement } r_brace .
+
+MethodName    = identifier .
+InputType     = MessageType .
+OutputType    = MessageType .
+MethodElement = OptionDecl |
+                EmptyDecl .
+
+MessageType = l_paren [ stream ] MethodDeclTypeName r_paren .
+
+
+
+
+

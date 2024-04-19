@@ -24,7 +24,7 @@
    ["-i" "--input-file FILENAME"  "Input file"]
    ["-O" "--output-format FORMAT" "Output format (avro, overarch)" :default :avro :parse-fn keyword]
    ["-o" "--output-file FILENAME" "Output file"]
-   [nil  "--filter-file FILENAME" "optional EDN file with a filter definition"]
+   ["-f" "--filter-file FILENAME" "optional EDN file with a filter definition"]
    ["-h" "--help"                 "Print help"]
    [nil  "--debug"                "Print debug information" :default false]])
 
@@ -81,30 +81,6 @@
     (catch Exception e
       (.printStacktrace e))))
 
-
-(defn filter-include
-  [include-set coll]
-  (if include-set
-    (filter #(contains? include-set (:name %)) coll)
-    coll))
-
-(defn filter-exclude
-  [exclude-set coll]
-  (if exclude-set
-    (remove #(contains? exclude-set (:name %)) coll)
-    coll))
-
-(defn filter-elements
-  [filter-file coll]
-  (if filter-file
-    (let [filter-spec (edn/read-string (slurp filter-file))
-          include-set (get filter-spec :include-set)
-          exclude-set (get filter-spec :exclude-set)]
-      (->> coll
-           (filter-include include-set)
-           (filter-exclude exclude-set)))
-    coll))
-
 ;;;
 ;;; Handler logic
 ;;;
@@ -114,21 +90,10 @@
   (if filter-file
     (do (println "Converting" input-file "from" input-format
                  "to" output-format "as" output-file "using filter spec from" filter-file)
-
-        (->> input-file
-             (slurp)
-             (conv/schema->model input-format)
-             (filter-elements filter-file)
-             (conv/model->schema output-format)
-             (spit output-file)))
+        (conv/convert input-format input-file output-format output-file filter-file))
     (do (println "Converting" input-file "from" input-format
-                 "to" output-format "as" output-file)
-
-        (->> input-file
-             (slurp)
-             (conv/schema->model input-format)
-             (conv/model->schema output-format)
-             (spit output-file)))))
+                 "to" output-format "as" output-file) 
+        (conv/convert input-format input-file output-format output-file))))
 
 ;;;
 ;;; CLI entry 

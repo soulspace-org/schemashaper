@@ -9,7 +9,8 @@
             [org.soulspace.schemashaper.adapter.avro :as avro]
             [org.soulspace.schemashaper.adapter.edmx :as edmx]
             [org.soulspace.schemashaper.adapter.overarch :as overarch]
-            [org.soulspace.schemashaper.adapter.protobuf :as proto])
+            [org.soulspace.schemashaper.adapter.protobuf :as proto]
+            [clojure.edn :as edn])
   (:gen-class))
 
 (def appname "schemashaper")
@@ -22,7 +23,8 @@
   [["-I" "--input-format FORMAT"  "Input format (edmx, overarch)" :default :edmx :parse-fn keyword]
    ["-i" "--input-file FILENAME"  "Input file"]
    ["-O" "--output-format FORMAT" "Output format (avro, overarch)" :default :avro :parse-fn keyword]
-   ["-o" "--output-file FILENAME" "Output file"] 
+   ["-o" "--output-file FILENAME" "Output file"]
+   [nil  "--filter-file FILENAME" "optional EDN file with a filter definition"]
    ["-h" "--help"                 "Print help"]
    [nil  "--debug"                "Print debug information" :default false]])
 
@@ -77,28 +79,63 @@
         :else ; failed custom validation => exit with usage summary
         {:exit-message (usage-msg appname description summary)}))
     (catch Exception e
-           (.printStacktrace e))))
+      (.printStacktrace e))))
+
+
+(defn filter-include
+  [include-set coll]
+  (if include-set
+    (filter #(contains? include-set (:name %)) coll)
+    coll))
+
+(defn filter-exclude
+  [exclude-set coll]
+  (if exclude-set
+    (remove #(contains? exclude-set (:name %)) coll)
+    coll))
+
+(defn filter-elements
+  [filter-file coll]
+  (if filter-file
+    (let [filter-spec (edn/read-string (slurp filter-file))
+          include-set (get filter-spec :include-set)
+          exclude-set (get filter-spec :exclude-set)]
+      (->> coll
+           (filter-include include-set)
+           (filter-exclude exclude-set)))
+    coll))
 
 ;;;
 ;;; Handler logic
 ;;;
 (defn handle
   "Handle the `options`."
-  [{:keys [input-format input-file output-format output-file] :as options}]
-  (println "Converting" input-file "from" input-format
-           "to" output-format "as" output-file)
-  (->> input-file
-       (slurp)
-       (conv/schema->model input-format)
-       (conv/model->schema output-format)
-       (spit output-file)))
+  [{:keys [input-format input-file output-format output-file filter-file] :as options}]
+  (if filter-file
+    (do (println "Converting" input-file "from" input-format
+                 "to" output-format "as" output-file "using filter spec from" filter-file)
+
+        (->> input-file
+             (slurp)
+             (conv/schema->model input-format)
+             (filter-elements filter-file)
+             (conv/model->schema output-format)
+             (spit output-file)))
+    (do (println "Converting" input-file "from" input-format
+                 "to" output-format "as" output-file)
+
+        (->> input-file
+             (slurp)
+             (conv/schema->model input-format)
+             (conv/model->schema output-format)
+             (spit output-file)))))
 
 ;;;
 ;;; CLI entry 
 ;;;
 (defn -main
   "Main function as CLI entry point."
-  [& args] 
+  [& args]
   (let [{:keys [options exit-message success]} (validate-args args cli-opts)]
     (when (:debug options)
       (println options))

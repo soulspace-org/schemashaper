@@ -6,19 +6,38 @@
 (def supported-schemas
   #{:avro :edmx :overarch :proto})
 
-(defn schema-type
-  "Returns the schema type."
-  ([type & rest]
-   type))
 
+(defn adapter
+  "Returns the adapter."
+  ([adapter & rest]
+   adapter))
+
+;;;
+;;; Conversion multimethods to implement by each schema adapter
+;;;
 (defmulti schema->model
-  "Converts a schema to the model."
-  schema-type)
+  "Converts a schema to the model.
+   
+   Arities:
+   [format input]
+   [format criteria input]
+   
+   * `format` is used to dispatch to adapter (e.g. :avro)
+   * `input` the read input to convert
+   * `criteria` filter criteria applied in conversion"
+  adapter)
 
 (defmulti model->schema
-  "Converts the model to a schema."
-  schema-type)
+  "Converts the model to a schema.
 
+   Arities:
+   [format coll]
+   [format criteria coll]
+
+   * `format` is used to dispatch to adapter (e.g. :avro)
+   * `coll` the collection of model elements to convert
+   * `criteria` filter criteria applied in conversion"
+  adapter)
 
 (defn filter-include
   [include-set coll]
@@ -43,9 +62,8 @@
            (filter-exclude exclude-set)))
     coll))
 
-
 (defn convert
-  ""
+  "Converts the input to the output."
   ([input-format input-file output-format output-file]
    (->> input-file
         (slurp)
@@ -53,10 +71,10 @@
         (model->schema output-format)
         (spit output-file)))
   ([input-format input-file output-format output-file filter-file]
-   (->> input-file
-        (slurp)
-        (schema->model input-format)
-        (filter-elements filter-file)
-        (model->schema output-format)
-        (spit output-file)))
-  )
+   (let [filter (edn/read-string (slurp filter-file))]
+     (->> input-file
+          (slurp)
+          (schema->model input-format filter)
+;          (filter-elements filter-file)
+          (model->schema output-format filter)
+          (spit output-file)))))

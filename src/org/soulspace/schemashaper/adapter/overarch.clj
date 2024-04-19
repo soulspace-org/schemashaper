@@ -3,15 +3,20 @@
             [org.soulspace.schemashaper.application.conversion :as conv]))
 
 
-(defmethod conv/model->schema :overarch
-  [format coll]
-  (->> coll
-       (into #{})))
-
+;;
+;; Conversion functions for Overarch
+;;
 (defmethod conv/schema->model :overarch
-  [format file]
-  (->> file
-       (slurp)
-       (edn/read-string)
-       (filter #(= :class (:el %)))))
+  ([format input]
+   (conv/schema->model format {} input))
+  ([format criteria input]
+   (->> input
+        (edn/read-string)
+        (filter #(= :class (:el %))))))
 
+(defmethod conv/model->schema :overarch
+  ([format coll]
+   (conv/model->schema format {} coll))
+  ([format criteria coll]
+   (->> coll
+        (into #{}))))

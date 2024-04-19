@@ -41,6 +41,20 @@
    ;:date-time-offset ""
    })
 
+;;
+;; AVRO to model conversions
+;;
+(defn avro-field->field
+  ""
+  [])
+
+(defn avro-record->class
+  ""
+  [])
+
+;;
+;; Model to AVRO conversions
+;;
 (defn field->avro-field
   "Returns an avro field for the model field."
   [e]
@@ -66,16 +80,26 @@
    :name (:name e)
    :fields (into [] (map field->avro-field (:ct e)))})
 
-(defmethod conv/model->schema :avro
-  [format coll]
-  (->> coll
-       (map class->avro-record)
-       (into [])
-       (json/json-str)))
-
+;;
+;; Conversion functions for AVRO
+;;
 (defmethod conv/schema->model :avro
- [format file]
- )
+  ([format input]
+   (conv/schema->model format {} input))
+  ([format filter input]
+   (->> input
+        (json/read-str))
+   ; TODO
+   ))
+
+(defmethod conv/model->schema :avro
+  ([format coll]
+   (conv/model->schema format {} coll))
+  ([format filter coll]
+   (->> coll
+        (map class->avro-record)
+        (into [])
+        (json/json-str))))
 
 (comment
   (json/read-json "test-avro.json")

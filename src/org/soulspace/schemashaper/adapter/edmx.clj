@@ -1,7 +1,7 @@
 (ns org.soulspace.schemashaper.adapter.edmx
   (:require [clojure.string :as str]
             [clojure.data.xml :as xml]
-            [org.soulspace.schemashaper.domain.model :as model]
+            ;[org.soulspace.schemashaper.domain.model :as model]
             [org.soulspace.schemashaper.application.conversion :as conv]))
 
 (def edmx->types
@@ -40,41 +40,50 @@
    :date-time-offset "Edm.DateTimeOffset" ; TODO
    })
 
+
+(defn element-tag?
+  "Returns true if the tag of the `element` equals the given `tag`."
+  [tag element]
+  (= tag (:tag element)))
+
+(defn tag-pred
+  "Returns a predicate that takes an element and checks if the element has the given `tag`"
+  [tag]
+  (fn [e] (= tag (:tag e))))
+
+(defn tag-pred
+  "Returns a predicate that takes an element and checks if the element has the given `tag`"
+  [tag]
+  (fn [e] (let [_ (print "Tag" tag)
+                _ (println " Element" e)
+                result (= tag (:tag e))
+                _ (println "Result" result)]
+            result)))
+
 (defn name->id
   "Generates an id from a name."
-  [n]
-  (-> n
-      (str/replace "_" "/")
-      (keyword)))
-
-(defn collection?
-  "Returns true if t is a collection type."
-  [t]
-  (str/starts-with? t "Collection("))
+  ([n]
+   (-> n
+       (str/replace "_" "/")
+       (keyword)))
+  ([schema-ns n]
+   (->> n
+        (str schema-ns "/")
+        (keyword))))
 
 (defn collection-type
-  "Returns the type if t is a collection."
+  "Returns the type if t is a collection, otherwise returns nil."
   [t]
-;  (println "Collection type?" t)
+  (println "Collection type?" t)
   (when-let [match (re-matches #"Collection\((.*)\)" t)]
     (second match)))
-
-(defn elements
-  "Returns the elements of the first schema."
-  [{:keys [tag attrs content] :as e}]
-  (when (= :Edmx tag)
-    (-> content
-        first
-        :content
-        first
-        :content)))
 
 (defn schema
   "Returns the first Schema element from the content of the DataService element."
   [{:keys [tag attrs content] :as e}]
-  (when (= :DataService tag)
+  (when (= :DataServices tag)
     (->> content
-         (filter #(= :Schema (:tag %)))
+         (filter (tag-pred :Schema))
          first)))
 
 (defn data-service
@@ -82,57 +91,135 @@
   [{:keys [tag attrs content] :as e}]
   (when (= :Edmx tag)
     (->> content
-         (filter #(= :DataService (:tag %)))
-          first)))
+         (filter (tag-pred :DataServices))
+         first)))
 
 ;; new parserless
 (defn ->field
-  "Returns a model field for the property."
-  [{:keys [tag attrs content] :as e}]
-;  (print "Field " e)
-  (let [f-name (:Name attrs)
-        f-type (get attrs :Type (:ToRole attrs))]
-    (if-let [collection-type (collection-type f-type)]
-      {:el :field
+  "Returns a model field for the property element `p` in the context of the `schema-ns`."
+  [schema-ns criteria {:keys [tag attrs content] :as p}]
+  (when (contains? #{:Property :NavigationProperty} tag)
+    (let [f-name (:Name attrs)
+          f-type (get attrs :Type (:ToRole attrs))]
+      (if-let [collection-type (collection-type f-type)]
+        {:el :field
+         :edmx/tag tag
+         :name f-name
+         :collection :list
+         :cardinality :zero-to-many
+         :type (get edmx->types collection-type collection-type)}
+        {:el :field
+         :name f-name
+         :optional (Boolean/valueOf (get attrs :Nullable "true"))
+         :type (get edmx->types f-type f-type)}))))
+
+(defn ->class-simple
+  "Returns a model class for the EntityType tag."
+  [schema-ns criteria {:keys [tag attrs content] :as e}]
+  (when (contains? #{:EntityType} tag)
+    (let [ct (into [] (concat (map (partial ->field schema-ns)
+                                   (filter (tag-pred :Property) content))
+                              (map (partial ->field schema-ns)
+                                   (filter (tag-pred :NavigationProperty) content))))]
+      {:el :class
        :edmx/tag tag
-       :name f-name
-       :collection :list
-       :cardinality :zero-to-many
-       :type (get edmx->types collection-type collection-type)}
-      {:el :field
-       :name f-name
-       :optional (Boolean/valueOf (get attrs :Nullable "true"))
-       :type (get edmx->types f-type f-type)})))
+       :edmx/schema-ns schema-ns
+       :id (name->id schema-ns (:Name attrs))
+       :name (:Name attrs)
+       :ct ct})))
+
+
 
 (defn ->class
   "Returns a model class for the EntityType tag."
-  [{:keys [tag attrs content] :as e}]
-;  (println "Element" e)
-  (when (= tag :EntityType)
+  [schema-ns criteria {:keys [tag attrs content] :as e}]
+  (let [id (name->id schema-ns (:Name attrs))
+        properties (filter (tag-pred :Property) content)
+        nav-properties (filter (tag-pred :NavigationProperty) content)
+        ct (into [] (concat (map (partial ->field schema-ns)
+                                 properties)
+                            (map (partial ->field schema-ns)
+                                 nav-properties)))]
     {:el :class
      :edmx/tag tag
-     :id (name->id (:Name attrs))
+     :edmx/schema-ns schema-ns
+     :id (name->id schema-ns (:Name attrs))
      :name (:Name attrs)
-     :ct (into [] (concat (map ->field (filter #(= :Property (:tag %)) content))
-                          (map ->field (filter #(= :NavigationProperty (:tag %)) content))))}))
+     :ct ct}))
 
+;;
+;; Conversion functions for EDMX
+;;
 (defmethod conv/schema->model :edmx
-  [format input]
-;  (println "Format" format ", File" file)
-  (let [edmx (xml/parse-str input)
-;        _ (println "EDMX" edmx)
-        els (elements edmx)
-;        _ (println "Elements" els)
-        model (map ->class (filter #(= :EntityType (:tag %)) els))]
-    model))
+  ([format input]
+   (conv/schema->model format {} input))
+  ([format criteria input]
+   (let [edmx (xml/parse-str input)
+;         _ (println "EDMX" edmx)
+         data-service (data-service edmx)
+         schema (schema data-service)
+         schema-namespace (:Namespace (:attrs schema))
+         els (:content schema)
+         model (map (partial ->class schema-namespace criteria)
+                    (filter (tag-pred :EntityType) els))]
+     model)))
 
 (defmethod conv/model->schema :edmx 
-  [format coll])
+  ([format coll]
+   (conv/model->schema format {} coll))
+  ([format criteria coll]
+   )
+  )
 
 (comment
   (keyword (str/replace "Bla.Fasel_Foo" "_" "/"))
   (Boolean/valueOf "true")
   (collection-type "Collection(IdentData)")
-  ; (slurp "C:/PAG/datona/Cluu_Odata_$metadata.xml")
+  (def test-props
+    [{:tag :Property
+      :attrs {:Name "EventID"
+              :Type "Edm.Int64"
+              :Nullable "false"}
+      :content []}
+     {:tag :Property
+      :attrs {:Name "Description"
+              :Type "Edm.String"
+              :Nullable "true"
+              :MaxLength 512}
+      :content []}])
+  (def test-entities
+    [{:tag :EntityType
+      :attrs {:Name "Event"}
+      :content [{:tag :Property
+                 :attrs {:Name "EventID"
+                         :Type "Edm.Int64"
+                         :Nullable "false"}
+                 :content []}
+                {:tag :Property
+                 :attrs {:Name "Description"
+                         :Type "Edm.String"
+                         :Nullable "true"
+                         :MaxLength 512}
+                 :content []}]}])
+  (def test-entities2
+    [{:tag :EntityType
+      :attrs {:Name "Event"}
+      :content test-props}])
+  
+  (filter (tag-pred :Property) test-props)
+  (filter (tag-pred :NavigationProperty) test-props)
+  (concat (filter (tag-pred :Property) test-props)
+          (filter (tag-pred :NavigationProperty) test-props))
+  (into [] (concat (filter (tag-pred :Property) test-props)
+                   (filter (tag-pred :NavigationProperty) test-props)))
+  
+  ; doesn't work
+  (->class "MyNS" {} {:tag :EntityType :attrs {:Name "Event"} :content test-props})
+  (->class "MyNS" {} (first test-entities))
+  (map (partial ->class "ODataAPI" {})
+       (filter #(= :EntityType (:tag %)) test-entities))
+
+
+
   ;
   )

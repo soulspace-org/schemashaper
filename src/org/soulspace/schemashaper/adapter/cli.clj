@@ -113,7 +113,7 @@
 (comment
   (json/json-str (conv/model->schema :avro [{:el :class :name "TestClass" :ct [{:el :field :name "id" :type :int}]}]))
 
-  (conv/schema->model :edmx (slurp "dev/sap-sample-edmx.xml"))
+  (conv/schema->model :edmx (slurp "examples/sap-sample-edmx.xml"))
 
   (-main "-i" "dev/sap-sample-edmx.xml" "-o" "sap-sample-edmx.json" "--debug")
   ;

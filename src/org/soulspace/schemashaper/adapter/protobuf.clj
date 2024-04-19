@@ -36,26 +36,47 @@
    :binary  "bytes"
    :class   "message"})
 
-(defn field->proto
+
+(defn proto-field->field
+  ""
+  [])
+
+(defn proto-message->class
+  ""
+  [])
+
+(defn field->proto-field
   "Returns the proto schema for a model field."
   [idx e]
   (str "  "
        (when (:optional e) "optional ")
+       (:name e)
+       " = " idx
        )
   ; TODO
   )
 
-(defn class->proto
+(defn class->proto-message
   "Returns the proto schema for a model class."
   [e]
+  [(str "message " (:name e) " {")
+   (map-indexed field->proto-field (filter #(= :field (:el %)) (:ct e)))
+   (str "}")]
   )
 
-(defmethod conv/model->schema :proto
-  [format coll]
-  (into [] (map class->proto coll)))
-
+;;
+;; Conversion functions for ProtoBuf
+;;
 (defmethod conv/schema->model :proto
-  [format file])
+  ([format input]
+   (conv/schema->model format {} input))
+  ([format criteria input]))
+
+(defmethod conv/model->schema :proto
+  ([format coll]
+   (conv/model->schema format {} coll))
+  ([format criteria coll]
+   (into [] (map class->proto-message coll))))
 
 (comment
   (map-indexed #(println %1 %2) ["a" "b" "c"])

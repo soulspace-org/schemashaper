@@ -5,6 +5,24 @@
              :uuid :binary :instant :date :time :duration :date-time-offset
              :list :map :set :class})
 
+(defn include?
+  "Returns true if the element `e` is included by the given `criteria`."
+  [criteria e]
+  (if-let [include-set (:include-set criteria)]
+    (if (contains? include-set e)
+      true
+      false)
+    true))
+
+(defn exclude?
+  "Returns true if the element `e` is excluded by the given `criteria`."
+  [criteria e]
+  (if-let [exclude-set (:exclude-set criteria)]
+    (if (contains? exclude-set e)
+      false
+      true)
+    false))
+
 (defn traverse
   "Recursively traverses the `coll` of elements and returns the elements (selected
    by the optional `select-fn`) and transformed by the `step-fn`.

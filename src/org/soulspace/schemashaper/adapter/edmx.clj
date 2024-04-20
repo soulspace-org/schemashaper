@@ -40,6 +40,24 @@
    :date-time-offset "Edm.DateTimeOffset" ; TODO
    })
 
+(defn include?
+  "Returns true if the element `e` is included by the given `criteria`."
+  [criteria e]
+  (if-let [include-set (:include-set criteria)]
+    (if (contains? include-set e)
+      true
+      false)
+    true))
+
+(defn exclude?
+  "Returns true if the element `e` is excluded by the given `criteria`."
+  [criteria e]
+  (if-let [exclude-set (:exclude-set criteria)]
+    (if (contains? exclude-set e)
+      false
+      true)
+    false))
+
 (defn element-tag?
   "Returns true if the tag of the `element` equals the given `tag`."
   [tag element]

@@ -40,7 +40,6 @@
    :date-time-offset "Edm.DateTimeOffset" ; TODO
    })
 
-
 (defn element-tag?
   "Returns true if the tag of the `element` equals the given `tag`."
   [tag element]
@@ -51,14 +50,47 @@
   [tag]
   (fn [e] (= tag (:tag e))))
 
-(defn tag-pred
-  "Returns a predicate that takes an element and checks if the element has the given `tag`"
-  [tag]
-  (fn [e] (let [_ (print "Tag" tag)
-                _ (println " Element" e)
-                result (= tag (:tag e))
-                _ (println "Result" result)]
-            result)))
+(defn split-index
+  ""
+  [n]
+  (re-matches #"(\w+)(\d+)" n))
+
+(defn parse-name
+  "Parses the name `n` and returns a map with the name and the namespace, if contained."
+  [n]
+  (let [parts (str/split n #"\.")]
+    (if (> (count parts) 1)
+      {:name (last parts)
+       :schema-ns (str/join "." (drop-last parts))}
+      {:name (first parts)})))
+
+(defn parse-association-name
+  "Parses the name `n` of an association and returns a map with the names
+   and cardinalities of the roles of the association."
+  [n]
+  (let [parts (str/split n #"_")
+        [_ to-card idx] (split-index (nth parts 3))]
+  {:from-name (nth parts 0)
+   :to-name (nth parts 1)
+   :from-card (nth parts 2)
+   ; TODO handle trailing digits
+   :to-card to-card
+   :index idx}))
+
+(defn parse-relation-name
+  "Parses the name `n` of a relation and returns a map with the namespace and the names
+   and cardinalities of the roles of the relation."
+  [n]
+  (let [parsed-name (parse-name n)
+        parsed-asso (parse-association-name (:name parsed-name))]
+  (merge parsed-name parsed-asso)))
+
+(defn type-name
+  ""
+  ([{:keys [schema-ns name]}]
+   (type-name schema-ns name))
+  ([schema-ns name]
+   (str/join "." [schema-ns name])))
 
 (defn name->id
   "Generates an id from a name."
@@ -95,7 +127,7 @@
          first)))
 
 ;; new parserless
-(defn ->field
+(defn edmx-property->field
   "Returns a model field for the property element `p` in the context of the `schema-ns`."
   [schema-ns criteria {:keys [tag attrs content] :as p}]
   (when (contains? #{:Property :NavigationProperty} tag)
@@ -113,13 +145,15 @@
          :optional (Boolean/valueOf (get attrs :Nullable "true"))
          :type (get edmx->types f-type f-type)}))))
 
-(defn ->class-simple
-  "Returns a model class for the EntityType tag."
+(defn edmx-entity-type->class
+  "Returns a model class for the EntityType element `e` in the context of the `schema-ns`."
   [schema-ns criteria {:keys [tag attrs content] :as e}]
   (when (contains? #{:EntityType} tag)
-    (let [ct (into [] (concat (map (partial ->field schema-ns)
+    (let [ct (into [] (concat (map (partial edmx-property->field
+                                            schema-ns criteria)
                                    (filter (tag-pred :Property) content))
-                              (map (partial ->field schema-ns)
+                              (map (partial edmx-property->field
+                                            schema-ns criteria)
                                    (filter (tag-pred :NavigationProperty) content))))]
       {:el :class
        :edmx/tag tag
@@ -128,24 +162,10 @@
        :name (:Name attrs)
        :ct ct})))
 
-
-
-(defn ->class
-  "Returns a model class for the EntityType tag."
+(defn edmx-association->relation
+  "Returns a model relation for the Association element in the context of the `schema-ns`."
   [schema-ns criteria {:keys [tag attrs content] :as e}]
-  (let [id (name->id schema-ns (:Name attrs))
-        properties (filter (tag-pred :Property) content)
-        nav-properties (filter (tag-pred :NavigationProperty) content)
-        ct (into [] (concat (map (partial ->field schema-ns)
-                                 properties)
-                            (map (partial ->field schema-ns)
-                                 nav-properties)))]
-    {:el :class
-     :edmx/tag tag
-     :edmx/schema-ns schema-ns
-     :id (name->id schema-ns (:Name attrs))
-     :name (:Name attrs)
-     :ct ct}))
+  )
 
 ;;
 ;; Conversion functions for EDMX
@@ -160,7 +180,8 @@
          schema (schema data-service)
          schema-namespace (:Namespace (:attrs schema))
          els (:content schema)
-         model (map (partial ->class schema-namespace criteria)
+         model (map (partial edmx-entity-type->class
+                             schema-namespace criteria)
                     (filter (tag-pred :EntityType) els))]
      model)))
 
@@ -168,13 +189,16 @@
   ([format coll]
    (conv/model->schema format {} coll))
   ([format criteria coll]
-   )
-  )
+   ))
 
 (comment
   (keyword (str/replace "Bla.Fasel_Foo" "_" "/"))
   (Boolean/valueOf "true")
   (collection-type "Collection(IdentData)")
+  (split-index "Many0")
+  (parse-name "ODataAPI.Event")
+  (parse-association-name "Event_Session_One_Many0")
+  (parse-relation-name "ODataAPI.Event_Session_One_Many0")
   (def test-props
     [{:tag :Property
       :attrs {:Name "EventID"
@@ -214,9 +238,9 @@
                    (filter (tag-pred :NavigationProperty) test-props)))
   
   ; doesn't work
-  (->class "MyNS" {} {:tag :EntityType :attrs {:Name "Event"} :content test-props})
-  (->class "MyNS" {} (first test-entities))
-  (map (partial ->class "ODataAPI" {})
+  (edmx-entity-type->class "MyNS" {} {:tag :EntityType :attrs {:Name "Event"} :content test-props})
+  (edmx-entity-type->class "MyNS" {} (first test-entities))
+  (map (partial edmx-entity-type->class "ODataAPI" {})
        (filter #(= :EntityType (:tag %)) test-entities))
 
 

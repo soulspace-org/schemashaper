@@ -1,0 +1,282 @@
+[
+    {
+        "type": "record",
+        "name": "Event",
+        "fields": [
+            {
+                "name": "EventID",
+                "type": "long"
+            },
+            {
+                "name": "Description",
+                "type": [
+                    "null",
+                    "string"
+                ]
+            },
+            {
+                "name": "Name",
+                "type": [
+                    "null",
+                    "string"
+                ]
+            },
+            {
+                "name": "Type",
+                "type": [
+                    "null",
+                    "string"
+                ]
+            },
+            {
+                "name": "Country",
+                "type": [
+                    "null",
+                    "string"
+                ]
+            },
+            {
+                "name": "Features",
+                "type": [
+                    "null",
+                    "Feature.ODataAPI"
+                ]
+            },
+            {
+                "name": "Sessions",
+                "type": [
+                    "null",
+                    "Session.ODataAPI"
+                ]
+            },
+            {
+                "name": "Theme",
+                "type": [
+                    "null",
+                    "GlobalTheme.ODataAPI"
+                ]
+            },
+            {
+                "name": "Tracks",
+                "type": [
+                    "null",
+                    "Track.ODataAPI"
+                ]
+            }
+        ]
+    },
+    {
+        "type": "record",
+        "name": "Session",
+        "fields": [
+            {
+                "name": "SessionID",
+                "type": "long"
+            },
+            {
+                "name": "Description",
+                "type": [
+                    "null",
+                    "string"
+                ]
+            },
+            {
+                "name": "EventID",
+                "type": [
+                    "null",
+                    "long"
+                ]
+            },
+            {
+                "name": "Title",
+                "type": [
+                    "null",
+                    "string"
+                ]
+            },
+            {
+                "name": "Track",
+                "type": [
+                    "null",
+                    "Track.ODataAPI"
+                ]
+            },
+            {
+                "name": "Event",
+                "type": [
+                    "null",
+                    "Event.ODataAPI"
+                ]
+            }
+        ]
+    },
+    {
+        "type": "record",
+        "name": "Track",
+        "fields": [
+            {
+                "name": "DisplayColor",
+                "type": [
+                    "null",
+                    "string"
+                ]
+            },
+            {
+                "name": "EventID",
+                "type": [
+                    "null",
+                    "long"
+                ]
+            },
+            {
+                "name": "Name",
+                "type": [
+                    "null",
+                    "string"
+                ]
+            },
+            {
+                "name": "TrackID",
+                "type": "long"
+            }
+        ]
+    },
+    {
+        "type": "record",
+        "name": "User",
+        "fields": [
+            {
+                "name": "Company",
+                "type": [
+                    "null",
+                    "string"
+                ]
+            },
+            {
+                "name": "FirstName",
+                "type": [
+                    "null",
+                    "string"
+                ]
+            },
+            {
+                "name": "LastName",
+                "type": [
+                    "null",
+                    "string"
+                ]
+            },
+            {
+                "name": "UserID",
+                "type": "string"
+            },
+            {
+                "name": "Events",
+                "type": [
+                    "null",
+                    "Event.ODataAPI"
+                ]
+            }
+        ]
+    },
+    {
+        "type": "record",
+        "name": "UserSessionAgenda",
+        "fields": [
+            {
+                "name": "EventID",
+                "type": [
+                    "null",
+                    "long"
+                ]
+            },
+            {
+                "name": "Notes",
+                "type": [
+                    "null",
+                    "string"
+                ]
+            },
+            {
+                "name": "Priority",
+                "type": [
+                    "null",
+                    "int"
+                ]
+            },
+            {
+                "name": "SessionID",
+                "type": "long"
+            },
+            {
+                "name": "UserID",
+                "type": [
+                    "null",
+                    "string"
+                ]
+            },
+            {
+                "name": "Session",
+                "type": [
+                    "null",
+                    "Session.ODataAPI"
+                ]
+            }
+        ]
+    },
+    {
+        "type": "record",
+        "name": "Feature",
+        "fields": [
+            {
+                "name": "FeatureID",
+                "type": "long"
+            },
+            {
+                "name": "Name",
+                "type": [
+                    "null",
+                    "string"
+                ]
+            },
+            {
+                "name": "Status",
+                "type": [
+                    "null",
+                    "string"
+                ]
+            }
+        ]
+    },
+    {
+        "type": "record",
+        "name": "GlobalTheme",
+        "fields": [
+            {
+                "name": "DisplayName",
+                "type": [
+                    "null",
+                    "string"
+                ]
+            },
+            {
+                "name": "SystemTheme",
+                "type": [
+                    "null",
+                    "boolean"
+                ]
+            },
+            {
+                "name": "ThemeCode",
+                "type": [
+                    "null",
+                    "string"
+                ]
+            },
+            {
+                "name": "ThemeID",
+                "type": "long"
+            }
+        ]
+    }
+]

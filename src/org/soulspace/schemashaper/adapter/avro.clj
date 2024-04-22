@@ -36,10 +36,11 @@
    :map              "map"
    :binary           "bytes"
    :class            "record"
-   ;:date             ""
-   ;:time             ""
+   :uuid             ["string" "uuid"]
+   :date             ["int" "date"]
+   :time             ["int" "time-millis"]
+   :date-time-offset ["long" "local-timestamp-millis"]
    ;:duration         ""
-   ;:date-time-offset ""
    })
 
 (defn optional?
@@ -72,6 +73,7 @@
         name-part (last parts)]
    (keyword (str/join "/" [(str/join "." ns-parts) name-part]))))
 
+
 ;;
 ;; AVRO to model conversions
 ;;
@@ -99,6 +101,17 @@
   {:el :namespace
    :id (namespace-id (:name e))})
 
+(defn avro-type
+  "Returns the avro type of the type."
+  [e]
+  (let [t (get types->avro (:type e) (:type e))]
+    (println "Element" e)
+    (println "AVRO Type" t)
+    (if (vector? t)
+      {:type (first t)
+       :logical-type (second t)}
+      t)))
+
 ;;
 ;; Model to AVRO conversions
 ;;
@@ -109,16 +122,16 @@
     (:collection e)
     {:name (:name e)
      :type {:type "array"
-            :values (get types->avro (:type e) (:type e))
+            :values (avro-type e)
             :default []}}
 
     (:optional e)
     {:name (:name e)
-     :type ["null" (get types->avro (:type e) (:type e))]}
+     :type ["null" (avro-type e)]}
 
     :else
     {:name (:name e)
-     :type (get types->avro (:type e) (:type e))}))
+     :type (avro-type e)}))
 
 (defn model-class->avro-record
   "Returns an avro record for the model class."
@@ -160,6 +173,8 @@
 
 (comment
   (json/read-str (slurp "examples/sap-sample-avro.json") :key-fn keyword)
+  (vector? (:uuid types->avro))
+  (vector? (:date types->avro))
   (optional? {:name "Notes", :type ["null" "string"]})
   (optional? {:name "SessionID", :type "long"})
 
@@ -171,7 +186,7 @@
                                         :name "TestClass"
                                         :ct [{:el :field
                                               :name "id"
-                                              :type :int
+                                              :type :uuid
                                               :optional true}]}]}}))
   ;(json/read)
   ;

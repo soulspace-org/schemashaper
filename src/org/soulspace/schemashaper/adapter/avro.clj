@@ -122,7 +122,7 @@
     (:collection e)
     {:name (:name e)
      :type {:type "array"
-            :values (avro-type e)
+            :items (avro-type e)
             :default []}}
 
     (:optional e)

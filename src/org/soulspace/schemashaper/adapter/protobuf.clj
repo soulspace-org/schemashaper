@@ -37,15 +37,15 @@
    :class   "message"})
 
 
-(defn proto-field->field
+(defn proto-field->model-field
   ""
   [])
 
-(defn proto-message->class
+(defn proto-message->model-class
   ""
   [])
 
-(defn field->proto-field
+(defn model-field->proto-field
   "Returns the proto schema for a model field."
   [idx e]
   (str "  "
@@ -56,11 +56,11 @@
   ; TODO
   )
 
-(defn class->proto-message
+(defn model-class->proto-message
   "Returns the proto schema for a model class."
   [e]
   [(str "message " (:name e) " {")
-   (map-indexed field->proto-field (filter #(= :field (:el %)) (:ct e)))
+   (map-indexed model-field->proto-field (filter #(= :field (:el %)) (:ct e)))
    (str "}")]
   )
 
@@ -76,7 +76,7 @@
   ([format coll]
    (conv/model->schema format {} coll))
   ([format criteria coll]
-   (into [] (map class->proto-message coll))))
+   (into [] (map model-class->proto-message coll))))
 
 (comment
   (map-indexed #(println %1 %2) ["a" "b" "c"])

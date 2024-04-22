@@ -132,7 +132,11 @@
 (defn model-namespace->avro-namespace
   "Returns an avro namespace for the model namespace."
   [criteria e]
-  {:namespace (:name e)})
+  (println "Namespace:" e)
+  (->> e
+       (:ct)
+       (map (partial model-class->avro-record (:name e) criteria))
+       (into [])))
 
 ;;
 ;; Conversion functions for AVRO
@@ -140,7 +144,7 @@
 (defmethod conv/schema->model :avro
   ([format input]
    (conv/schema->model format {} input))
-  ([format filter input]
+  ([format criteria input]
    (->> input
         (json/read-str))
    ; TODO
@@ -151,15 +155,24 @@
    (conv/model->schema format {} coll))
   ([format criteria coll]
    (->> coll
-        (map (partial model-class->avro-record "default" criteria))
-        (into [])
+        (mapcat (partial model-namespace->avro-namespace criteria)) 
         (json/write-str))))
 
 (comment
   (json/read-str (slurp "examples/sap-sample-avro.json") :key-fn keyword)
-  (println (json/write-str (conv/model->schema :avro [{:el :class :name "TestClass" :ct [{:el :field :name "id" :type :int :optional true}]}])))
   (optional? {:name "Notes", :type ["null" "string"]})
   (optional? {:name "SessionID", :type "long"})
+
+  (println (conv/model->schema :avro
+                               {}
+                               #{{:el :namespace
+                                  :name "TestNamespace"
+                                  :ct [{:el :class
+                                        :name "TestClass"
+                                        :ct [{:el :field
+                                              :name "id"
+                                              :type :int
+                                              :optional true}]}]}}))
   ;(json/read)
   ;
   )

@@ -236,18 +236,24 @@
            :optional (optional? e)
            :type (get edmx->types qualified-type qualified-type)})))))
 
+(defn edmx-fields->model-fields
+  [schema-ns criteria tag content]
+  (->> content
+       (filter (tag-pred tag))
+       (map (partial edmx-property->model-field
+             schema-ns criteria))
+       (remove nil?)
+       )
+)
+
 (defn edmx-entity-type->model-class
   "Returns a model class for the EntityType element `e` in the context of the `schema-ns`."
   [schema-ns criteria {:keys [tag attrs content] :as e}]
   (when (contains? #{:EntityType} tag)
     (let [e-name (:Name attrs)
           qname (qualified-name e-name schema-ns)
-          ct (into [] (concat (map (partial edmx-property->model-field
-                                            schema-ns criteria)
-                                   (filter (tag-pred :Property) content))
-                              (map (partial edmx-property->model-field
-                                            schema-ns criteria)
-                                   (filter (tag-pred :NavigationProperty) content))))]
+          ct (into [] (concat (edmx-fields->model-fields schema-ns criteria :Property content)
+                              (edmx-fields->model-fields schema-ns criteria :NavigationProperty content)))]
       (when (include-element? criteria
                               qname)
         {:el :class
@@ -276,6 +282,15 @@
                          schema-ns criteria)
                 (filter (tag-pred :EntityType) content))]}))
   )
+
+(defn edmx-entity-types->model-classes
+  [schema-ns criteria content]
+  (->> content
+       (filter (tag-pred :EntityType))
+       (map (partial edmx-entity-type->model-class
+                     schema-ns criteria))
+       (remove nil?)))
+
 ;;
 ;; Conversion functions for EDMX
 ;;
@@ -289,9 +304,7 @@
          schema (schema data-service)
          schema-ns (:Namespace (:attrs schema))
          els (:content schema)
-         model (map (partial edmx-entity-type->model-class
-                             schema-ns criteria)
-                    (filter (tag-pred :EntityType) els))]
+         model (edmx-entity-types->model-classes schema-ns criteria els)]
      model)))
 
 (defmethod conv/model->schema :edmx 
@@ -313,9 +326,11 @@
   (edm-type? "Edm.Int32")
   (edm-type? "ODataAPI.Event")
   (include? {} "ODataAPI.Event")
+  (include? {:include-set #{}} "ODataAPI.Event")
   (include? {:include-set #{"ODataAPI.Event"}} "ODataAPI.Event")
   (include? {:include-set #{"ODataAPI.Track"}} "ODataAPI.Event")
   (exclude? {} "ODataAPI.Event")
+  (exclude? {:exclude-set #{}} "ODataAPI.Event")
   (exclude? {:exclude-set #{"ODataAPI.Event"}} "ODataAPI.Event")
   (exclude? {:exclude-set #{"ODataAPI.Track"}} "ODataAPI.Event")
 
@@ -364,12 +379,11 @@
                                        :exclude-set #{}}
                            (first test-entities))
   (edmx-entity-type->model-class "ODataAPI" {:include-set #{}
-                                       :exclude-set #{"ODataAPI.Event"}}
+                                             :exclude-set #{"ODataAPI.Event"}}
                            (first test-entities))
-  (map (partial edmx-entity-type->model-class "ODataAPI" {})
-       (filter #(= :EntityType (:tag %)) test-entities))
 
-
+  (edmx-entity-types->model-classes "ODataAPI" {:include-set #{"ODataAPI.Event"}
+                                                :exclude-set #{}} test-entities)
 
   ;
   )

@@ -132,7 +132,7 @@
 (defn model-namespace->avro-namespace
   "Returns an avro namespace for the model namespace."
   [criteria e]
-  (println "Namespace:" e)
+;  (println "Namespace:" e)
   (->> e
        (:ct)
        (map (partial model-class->avro-record (:name e) criteria))

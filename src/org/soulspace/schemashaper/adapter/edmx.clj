@@ -94,7 +94,7 @@
 (defn base-type
   "Returns the type if t is a collection, otherwise returns nil."
   [t]
-  (println "Collection type?" t)
+;  (println "Collection type?" t)
   (when-let [match (re-matches #"Collection\((.*)\)" t)]
     (second match)))
 

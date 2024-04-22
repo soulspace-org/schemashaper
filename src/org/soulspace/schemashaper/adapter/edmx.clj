@@ -207,6 +207,14 @@
         (str schema-ns "/")
         (keyword))))
 
+(defn namespace-id
+  "Generates an id for the namespace"
+  [schema-ns]
+    (let [parts (str/split schema-ns #"\.")
+          ns-parts (drop-last parts)
+          name-part (last parts)]
+      (keyword (str/join "/" [(str/join "." ns-parts) name-part]))))
+
 (defn edmx-property->model-field
   "Returns a model field for the property element `e` in the context of the `schema-ns`."
   [schema-ns criteria {:keys [tag attrs content] :as e}]
@@ -256,6 +264,18 @@
   (when (contains? #{:Association} tag))
   )
 
+(defn edmx-schema->model-namespace
+  "Returns a model namespace for the Schema element."
+  [criteria {:keys [tag attrs content] :as e}]
+   (when (contains? #{:Schema} tag)
+     (let [schema-ns (:Namespace schema)]
+     {:el :namespace
+      :id (namespace-id schema-ns)
+      :name (:Name attrs)
+      :ct [(map (partial edmx-entity-type->model-class
+                         schema-ns criteria)
+                (filter (tag-pred :EntityType) content))]}))
+  )
 ;;
 ;; Conversion functions for EDMX
 ;;
@@ -267,10 +287,10 @@
 ;         _ (println "EDMX" edmx)
          data-service (data-service edmx)
          schema (schema data-service)
-         schema-namespace (:Namespace (:attrs schema))
+         schema-ns (:Namespace (:attrs schema))
          els (:content schema)
          model (map (partial edmx-entity-type->model-class
-                             schema-namespace criteria)
+                             schema-ns criteria)
                     (filter (tag-pred :EntityType) els))]
      model)))
 

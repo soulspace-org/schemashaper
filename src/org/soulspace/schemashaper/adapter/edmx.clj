@@ -207,7 +207,7 @@
         (str schema-ns "/")
         (keyword))))
 
-(defn edmx-property->field
+(defn edmx-property->model-field
   "Returns a model field for the property element `e` in the context of the `schema-ns`."
   [schema-ns criteria {:keys [tag attrs content] :as e}]
   (when (contains? #{:Property :NavigationProperty} tag)
@@ -228,16 +228,16 @@
            :optional (optional? e)
            :type (get edmx->types qualified-type qualified-type)})))))
 
-(defn edmx-entity-type->class
+(defn edmx-entity-type->model-class
   "Returns a model class for the EntityType element `e` in the context of the `schema-ns`."
   [schema-ns criteria {:keys [tag attrs content] :as e}]
   (when (contains? #{:EntityType} tag)
     (let [e-name (:Name attrs)
           qname (qualified-name e-name schema-ns)
-          ct (into [] (concat (map (partial edmx-property->field
+          ct (into [] (concat (map (partial edmx-property->model-field
                                             schema-ns criteria)
                                    (filter (tag-pred :Property) content))
-                              (map (partial edmx-property->field
+                              (map (partial edmx-property->model-field
                                             schema-ns criteria)
                                    (filter (tag-pred :NavigationProperty) content))))]
       (when (include-element? criteria
@@ -269,7 +269,7 @@
          schema (schema data-service)
          schema-namespace (:Namespace (:attrs schema))
          els (:content schema)
-         model (map (partial edmx-entity-type->class
+         model (map (partial edmx-entity-type->model-class
                              schema-namespace criteria)
                     (filter (tag-pred :EntityType) els))]
      model)))
@@ -338,15 +338,15 @@
   (into [] (concat (filter (tag-pred :Property) test-event-props)
                    (filter (tag-pred :NavigationProperty) test-event-props)))
 
-  (edmx-entity-type->class "ODataAPI" {}
+  (edmx-entity-type->model-class "ODataAPI" {}
                            (first test-entities))
-  (edmx-entity-type->class "ODataAPI" {:include-set #{"ODataAPI.Event"}
+  (edmx-entity-type->model-class "ODataAPI" {:include-set #{"ODataAPI.Event"}
                                        :exclude-set #{}}
                            (first test-entities))
-  (edmx-entity-type->class "ODataAPI" {:include-set #{}
+  (edmx-entity-type->model-class "ODataAPI" {:include-set #{}
                                        :exclude-set #{"ODataAPI.Event"}}
                            (first test-entities))
-  (map (partial edmx-entity-type->class "ODataAPI" {})
+  (map (partial edmx-entity-type->model-class "ODataAPI" {})
        (filter #(= :EntityType (:tag %)) test-entities))
 
 

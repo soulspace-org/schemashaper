@@ -9,14 +9,16 @@ SchemaShaper is targeted to schemas used for data transfer (e.g. messaging).
 
 Supported input schemas:
  * edmx (MS Entity Framework/[OData](https://docs.oasis-open.org/odata/odata/v4.0/os/part3-csdl/odata-v4.0-os-part3-csdl.html))
- * overarch ([Overarch](https://github.com/soulspace-org/overarch) Class Model)
+ * overarch ([Overarch](https://github.com/soulspace-org/overarch) [Class Model](https://github.com/soulspace-org/overarch/blob/main/doc/usage.md#class-model))
 
 Supported output schemas:
  * avro ([Apache AVRO](https://avro.apache.org/))
- * overarch ([Overarch](https://github.com/soulspace-org/overarch) Class Model)
+ * overarch ([Overarch](https://github.com/soulspace-org/overarch)
+  [Class Model](https://github.com/soulspace-org/overarch/blob/main/doc/usage.md#class-model))
 
 ### Limitations
 SchemaShaper may use only parts of the input schema relevant to data transfer.
+It is also in its early stages, so it might or might not support your use case yet.
 
 ## Build
 SchemaShaper is written in [Clojure](https://clojure.org) and gets built with

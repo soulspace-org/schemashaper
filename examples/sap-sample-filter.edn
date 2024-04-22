@@ -1,2 +1,2 @@
-{:include-set #{"Event" "Session" "Track"}
- :exclude-set #{"Track"}}
+{:include-set #{"ODataAPI.Event" "ODataAPI.Session" "ODataAPI.Track"}
+ :exclude-set #{"ODataAPI.Track"}}

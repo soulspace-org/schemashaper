@@ -66,8 +66,8 @@
 
 (defn namespace-id
   "Returns an id for the class."
-  [name]
-  (let [parts (str/split name #"\.")
+  [schema-ns]
+  (let [parts (str/split schema-ns #"\.")
         ns-parts (drop-last parts)
         name-part (last parts)]
    (keyword (str/join "/" [(str/join "." ns-parts) name-part]))))

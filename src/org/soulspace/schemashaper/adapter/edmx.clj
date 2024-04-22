@@ -180,22 +180,6 @@
          (not (exclude? criteria qualified-name)))
     ))
 
-(defn schema
-  "Returns the first Schema element from the content of the DataService element."
-  [{:keys [tag attrs content] :as e}]
-  (when (= :DataServices tag)
-    (->> content
-         (filter (tag-pred :Schema))
-         first)))
-
-(defn data-service
-  "Returns the DataService element."
-  [{:keys [tag attrs content] :as e}]
-  (when (= :Edmx tag)
-    (->> content
-         (filter (tag-pred :DataServices))
-         first)))
-
 (defn name->id
   "Generates an id from a name."
   ([n]
@@ -241,10 +225,8 @@
   (->> content
        (filter (tag-pred tag))
        (map (partial edmx-property->model-field
-             schema-ns criteria))
-       (remove nil?)
-       )
-)
+                     schema-ns criteria))
+       (remove nil?)))
 
 (defn edmx-entity-type->model-class
   "Returns a model class for the EntityType element `e` in the context of the `schema-ns`."
@@ -270,26 +252,50 @@
   (when (contains? #{:Association} tag))
   )
 
+(defn edmx-entity-types->model-classes
+  [schema-ns criteria tag content]
+  (->> content
+       (filter (tag-pred tag))
+       (map (partial edmx-entity-type->model-class
+                     schema-ns criteria))
+       (remove nil?)
+       (into [])))
+
 (defn edmx-schema->model-namespace
   "Returns a model namespace for the Schema element."
   [criteria {:keys [tag attrs content] :as e}]
-   (when (contains? #{:Schema} tag)
-     (let [schema-ns (:Namespace schema)]
-     {:el :namespace
-      :id (namespace-id schema-ns)
-      :name (:Name attrs)
-      :ct [(map (partial edmx-entity-type->model-class
-                         schema-ns criteria)
-                (filter (tag-pred :EntityType) content))]}))
-  )
+  (when (contains? #{:Schema} tag)
+    (let [schema-ns (:Namespace attrs)]
+      {:el :namespace
+       :id (namespace-id schema-ns)
+       :name schema-ns
+       :ct (edmx-entity-types->model-classes schema-ns criteria :EntityType content)})))
 
-(defn edmx-entity-types->model-classes
-  [schema-ns criteria content]
+(defn edmx-schemas->model-namespaces
+  "Returns the model namespaces for the Schema elements in content."
+  [criteria tag content]
   (->> content
-       (filter (tag-pred :EntityType))
-       (map (partial edmx-entity-type->model-class
-                     schema-ns criteria))
-       (remove nil?)))
+       (filter (tag-pred tag))
+       (map (partial edmx-schema->model-namespace criteria))
+       (remove nil?)
+       (into [])))
+
+(defn edmx-schema
+  "Returns the first Schema element from the content of the DataService element."
+  [{:keys [tag attrs content] :as e}]
+  (when (= :DataServices tag)
+    (->> content
+         (filter (tag-pred :Schema))
+         first)))
+
+(defn edmx-data-service
+  "Returns the DataService element."
+  [{:keys [tag attrs content] :as e}]
+  (when (= :Edmx tag)
+    (->> content
+         (filter (tag-pred :DataServices))
+         first)))
+
 
 ;;
 ;; Conversion functions for EDMX
@@ -300,11 +306,8 @@
   ([format criteria input]
    (let [edmx (xml/parse-str input)
 ;         _ (println "EDMX" edmx)
-         data-service (data-service edmx)
-         schema (schema data-service)
-         schema-ns (:Namespace (:attrs schema))
-         els (:content schema)
-         model (edmx-entity-types->model-classes schema-ns criteria els)]
+         data-service (edmx-data-service edmx)
+         model (edmx-schemas->model-namespaces criteria :Schema (:content data-service))]
      model)))
 
 (defmethod conv/model->schema :edmx 
@@ -374,16 +377,18 @@
                    (filter (tag-pred :NavigationProperty) test-event-props)))
 
   (edmx-entity-type->model-class "ODataAPI" {}
-                           (first test-entities))
+                                 (first test-entities))
   (edmx-entity-type->model-class "ODataAPI" {:include-set #{"ODataAPI.Event"}
-                                       :exclude-set #{}}
-                           (first test-entities))
+                                             :exclude-set #{}}
+                                 (first test-entities))
   (edmx-entity-type->model-class "ODataAPI" {:include-set #{}
                                              :exclude-set #{"ODataAPI.Event"}}
-                           (first test-entities))
+                                 (first test-entities))
 
   (edmx-entity-types->model-classes "ODataAPI" {:include-set #{"ODataAPI.Event"}
-                                                :exclude-set #{}} test-entities)
+                                                :exclude-set #{}} :EntityType test-entities)
 
+
+  (conv/schema->model :edmx {} (slurp "examples/sap-sample-edmx.xml"))
   ;
   )

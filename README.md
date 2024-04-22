@@ -34,7 +34,6 @@ to build a JAR file with all dependencies. This JAR file is created in the *targ
 ## Usage
 SchemaShaper is a commandline tool to convert one data schema into another data schema.
 
-
 ```
 SchemaShaper Schema Conversion CLI
 
@@ -48,6 +47,7 @@ Options:
   -i, --input-file FILENAME          Input file
   -O, --output-format FORMAT  :avro  Output format (avro, overarch)
   -o, --output-file FILENAME         Output file
+  -f, --filter-file FILENAME         optional EDN file with filter criteria
   -h, --help                         Print help
       --debug                        Print debug information
 ```
@@ -58,9 +58,7 @@ java -jar schemashaper.jar -i examples/sap-sample-edmx.xml -o generated/sample-a
 ```
 
 ## Copyright
-
 © 2024 Ludger Solbach
-
 
 ## License
 

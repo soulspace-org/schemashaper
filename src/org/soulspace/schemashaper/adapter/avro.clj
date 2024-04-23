@@ -73,6 +73,10 @@
         name-part (last parts)]
    (keyword (str/join "/" [(str/join "." ns-parts) name-part]))))
 
+(defn unqualified-name
+  "Returns the unqualified name."
+  [name]
+  (last (str/split name #"\.")))
 
 ;;
 ;; AVRO to model conversions
@@ -110,7 +114,7 @@
     (if (vector? t)
       {:type (first t)
        :logical-type (second t)}
-      t)))
+      (unqualified-name t))))
 
 ;;
 ;; Model to AVRO conversions

@@ -60,6 +60,17 @@
       (first base-set)
       base-set)))
 
+(defn avro-type
+  "Returns the avro type of the type."
+  [e]
+  (let [t (get types->avro (:type e) (:type e))]
+    (println "Element" e)
+    (println "AVRO Type" t)
+    (if (vector? t)
+      {:type (first t)
+       :logical-type (second t)}
+      t)))
+
 (defn class-id
   "Returns an id for the class."
   [schema-ns name]
@@ -92,29 +103,25 @@
 (defn avro-record->model-class
   "Returns a model class for the avro record."
   [schema-ns criteria e]
-  {:el :class
-   :id (class-id schema-ns (:name e))
-   :name (:name e)
-   :ct (into []
-             (map (partial avro-field->model-field schema-ns criteria)
-                  (:fields e)))})
+  (let [e-name (:name e)
+        e-ns (get e :namespace schema-ns)]
+    {:el :class
+     :id (class-id e-ns e-name)
+     :name e-name
+     :ct (into []
+               (map (partial avro-field->model-field e-ns criteria)
+                    (:fields e)))}))
 
-(defn avro-namespace->model-namespace
-  "Returns a model namespace for the avro namespace."
-  [criteria e]
-  {:el :namespace
-   :id (namespace-id (:name e))})
-
-(defn avro-type
-  "Returns the avro type of the type."
-  [e]
-  (let [t (get types->avro (:type e) (:type e))]
-    (println "Element" e)
-    (println "AVRO Type" t)
-    (if (vector? t)
-      {:type (first t)
-       :logical-type (second t)}
-      (unqualified-name t))))
+(defn avro->enum->model-enum
+  "Returns a model enum for the avro enum."
+  [schema-ns criteria e]
+  (let [e-name (:name e)
+        e-ns (get e :namespace schema-ns)]
+    {:el :enum
+     :id (class-id e-ns e-name)
+     :name e-name
+     ; TODO define values in model
+     }))
 
 ;;
 ;; Model to AVRO conversions
@@ -129,6 +136,12 @@
             :items (avro-type e)
             :default []}}
 
+    (:map e)
+    {:name (:name e)
+     :type {:type "map"
+            :values (avro-type e)
+            :default {}}}
+
     (:optional e)
     {:name (:name e)
      :type ["null" (avro-type e)]}
@@ -136,6 +149,15 @@
     :else
     {:name (:name e)
      :type (avro-type e)}))
+
+(defn model-enum->avro-enum
+  "Returns an avro enum for the model enum."
+  [schema-ns criteria e]
+  {:type "enum"
+   :name (:name e)
+   ; TODO define values in model
+   :symbols (into [] (keys (:values e)))}
+  )
 
 (defn model-class->avro-record
   "Returns an avro record for the model class."

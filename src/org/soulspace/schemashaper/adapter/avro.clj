@@ -125,6 +125,12 @@
             :items (avro-type e)
             :default []}}
 
+    (:map e)
+    {:name (:name e)
+     :type {:type "map"
+            :values (avro-type e)
+            :default {}}}
+
     (:optional e)
     {:name (:name e)
      :type ["null" (avro-type e)]}
@@ -132,6 +138,13 @@
     :else
     {:name (:name e)
      :type (avro-type e)}))
+
+(defn model-enum->avro-enum
+  "Returns an avro enum for the model enum."
+  [schema-ns criteria e]
+  {:type "enum"
+   :name (:name e)
+   :symbols (into [] (keys (:values e)))})
 
 (defn model-class->avro-record
   "Returns an avro record for the model class."

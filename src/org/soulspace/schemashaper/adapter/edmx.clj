@@ -246,17 +246,54 @@
          :abstract (abstract? e)
          :ct ct}))))
 
-(defn edmx-association->relation
-  "Returns a model relation for the Association element in the context of the `schema-ns`."
-  [schema-ns criteria {:keys [tag attrs content] :as e}]
-  (when (contains? #{:Association} tag))
-  )
-
 (defn edmx-entity-types->model-classes
+  "Returns a vector of model classes for the elements with `tag` in the `content`."
   [schema-ns criteria tag content]
   (->> content
        (filter (tag-pred tag))
        (map (partial edmx-entity-type->model-class
+                     schema-ns criteria))
+       (remove nil?)
+       (into [])))
+
+(defn edmx-member->model-enum-value
+  "Returns a model enum for the EnumType element `e` in the context of the `schema-ns`."
+  [schema-ns criteria {:keys [tag attrs content] :as e}]
+    (let [e-name (:Name attrs)
+          e-value (:Value attrs)]
+      ; TODO name :el type?
+      (if e-value
+        {:el :enum-value
+         :name e-name
+         :value e-value}
+        {:el :enum-value
+         :name e-name})))
+
+(defn edmx-enum-type->model-enum
+  "Returns a model enum for the EnumType element `e` in the context of the `schema-ns`."
+  [schema-ns criteria {:keys [tag attrs content] :as e}]
+  (when (contains? #{:EnumType} tag)
+    (let [e-name (:Name attrs)
+          qname (qualified-name e-name schema-ns)]
+      (when (include-element? criteria qname)
+        {:el :enum
+         :edmx/tag tag
+         :edmx/schema-ns schema-ns
+         :id (name->id schema-ns e-name)
+         :name e-name
+         ; TODO members
+         }))))
+
+(defn edmx-association->model-relation
+  "Returns a model relation for the Association element in the context of the `schema-ns`."
+  [schema-ns criteria {:keys [tag attrs content] :as e}]
+  (when (contains? #{:Association} tag)))
+
+(defn edmx-associations->model-relations
+  [schema-ns criteria tag content]
+  (->> content
+       (filter (tag-pred tag))
+       (map (partial edmx-association->model-relation
                      schema-ns criteria))
        (remove nil?)
        (into [])))

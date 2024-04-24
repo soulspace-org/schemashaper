@@ -1,6 +1,8 @@
 (ns org.soulspace.schemashaper.application.conversion
-  (:require [org.soulspace.schemashaper.domain.model :as model]
-            [clojure.edn :as edn]))
+  (:require [clojure.edn :as edn]
+            [clojure.java.io :as io]
+            [org.soulspace.schemashaper.domain.model :as model]
+            ))
 
 
 (def supported-schemas
@@ -62,6 +64,12 @@
            (filter-exclude exclude-set)))
     coll))
 
+(defn write-file
+  "Writes the content to the file with name `filename`. Creates missing parent directories first."
+  [filename content]
+  (io/make-parents filename)
+  (spit filename content))
+
 (defn convert
   "Converts the input to the output."
   ([input-format input-file output-format output-file]
@@ -69,7 +77,7 @@
         (slurp)
         (schema->model input-format)
         (model->schema output-format)
-        (spit output-file)))
+        (write-file output-file)))
   ([input-format input-file output-format output-file filter-file]
    (let [filter (edn/read-string (slurp filter-file))]
      (->> input-file
@@ -77,4 +85,4 @@
           (schema->model input-format filter)
 ;          (filter-elements filter-file)
           (model->schema output-format filter)
-          (spit output-file)))))
+          (write-file output-file)))))

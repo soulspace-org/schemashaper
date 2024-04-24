@@ -5,36 +5,36 @@
             [org.soulspace.schemashaper.application.conversion :as conv]))
 
 (def proto->types
-  {"null"    :nil
-   "int"     :int
-   "long"    :long
-   "float"   :float
-   "double"  :double
-   "boolean" :boolean
-   "string"  :string
-   "array"   :array
-   "enum"    :enum
-   "map"     :map
-   "bytes"   :binary
-   "fixed"   :string
-   "message" :class})
+  {"null"    "nil"
+   "int"     "int"
+   "long"    "long"
+   "float"   "float"
+   "double"  "double"
+   "boolean" "boolean"
+   "string"  "string"
+   "array"   "array"
+   "enum"    "enum"
+   "map"     "map"
+   "bytes"   "binary"
+   "fixed"   "string"
+   "message" "class"})
 
 (def types->proto
-  {:nil     "null"
-   :bytes   "int"
-   :short   "short"
-   :int     "int"
-   :long    "long"
-   :float   "float"
-   :double  "double"
-   :decimal "string"
-   :boolean "boolean"
-   :string  "string"
-   :array   "array"
-   :enum    "enum"
-   :map     "map"
-   :binary  "bytes"
-   :class   "message"})
+  {"nil"     "null"
+   "bytes"   "int"
+   "short"   "short"
+   "int"     "int"
+   "long"    "long"
+   "float"   "float"
+   "double"  "double"
+   "decimal" "string"
+   "boolean" "boolean"
+   "string"  "string"
+   "array"   "array"
+   "enum"    "enum"
+   "map"     "map"
+   "binary"  "bytes"
+   "class"   "message"})
 
 
 (defn proto-field->model-field

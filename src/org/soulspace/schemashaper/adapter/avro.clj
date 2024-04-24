@@ -6,19 +6,19 @@
             [org.soulspace.schemashaper.application.conversion :as conv]))
 
 (def avro->types
-  {"null"    :nil
-   "int"     :int
-   "long"    :long
-   "float"   :float
-   "double"  :double
-   "boolean" :boolean
-   "string"  :string
-   "array"   :array
-   "enum"    :enum
-   "map"     :map
-   "bytes"   :binary
-   "fixed"   :string
-   "record"  :class
+  {"null"    "nil"
+   "int"     "int"
+   "long"    "long"
+   "float"   "float"
+   "double"  "double"
+   "boolean" "boolean"
+   "string"  "string"
+   "array"   "array"
+   "enum"    "enum"
+   "map"     "map"
+   "bytes"   "binary"
+   "fixed"   "string"
+   "record"  "class"
    {:type "string" :logical-type "uuid"} :uuid
    {:type "int"  :logical-type "date"} :date
    {:type "int"  :logical-type "time-millis"} :time
@@ -27,26 +27,26 @@
    })
 
 (def types->avro
-  {:nil              "null"
-   :bytes            "int"
-   :short            "short"
-   :int              "int"
-   :long             "long"
-   :float            "float"
-   :double           "double"
-   :decimal          "string"
-   :boolean          "boolean"
-   :string           "string"
-   :array            "array"
-   :enum             "enum"
-   :map              "map"
-   :binary           "bytes"
-   :class            "record"
-   :uuid             ["string" "uuid"]
-   :date             ["int" "date"]
-   :time             ["int" "time-millis"]
-   :date-time-offset ["long" "local-timestamp-millis"]
-   ;:duration         ""
+  {"nil"              "null"
+   "bytes"            "int"
+   "short"            "short"
+   "int"              "int"
+   "long"             "long"
+   "float"            "float"
+   "double"           "double"
+   "decimal"          "string"
+   "boolean"          "boolean"
+   "string"           "string"
+   "array"            "array"
+   "enum"             "enum"
+   "map"              "map"
+   "binary"           "bytes"
+   "class"            "record"
+   "uuid"             ["string" "uuid"]
+   "date"             ["int" "date"]
+   "time"             ["int" "time-millis"]
+   "date-time-offset" ["long" "local-timestamp-millis"]
+   ;"duration"         ""
    })
 
 (defn optional?
@@ -60,30 +60,30 @@
   "Returns the model type for the avro type of element `e`."
   [e-type]
   (let [t (get avro->types e-type e-type)]
-    (println "Model Type" t)
+    ;(println "Model Type" t)
     t)
   )
-
-(defn avro-type
-  "Returns the avro type of the model type of element `e`."
-  [e-type]
-  (let [t (get types->avro e-type e-type)]
-    (println "AVRO Type" t)
-    (if (vector? t)
-      {:type (first t)
-       :logical-type (second t)}
-      t)))
 
 (defn base-type
   "Returns the base type of the element."
   [e-type]
   (let [t-set (set e-type)
         base-set (set/difference t-set #{"null"})]
-    (println "T-Set" t-set)
-    (println "Base-Set" base-set)
+    ;(println "T-Set" t-set)
+    ;(println "Base-Set" base-set)
     (if (= 1 (count base-set))
       (model-type (first base-set))
       base-set)))
+
+(defn avro-type
+  "Returns the avro type of the model type of element `e`."
+  [e-type]
+  (let [t (get types->avro e-type e-type)]
+    ;(println "AVRO Type" t)
+    (if (vector? t)
+      {:type (first t)
+       :logical-type (second t)}
+      t)))
 
 (defn class-id
   "Returns an id for the class."
@@ -118,7 +118,7 @@
 (defn avro-record->model-class
   "Returns a model class for the avro record."
   [schema-ns criteria e]
-  (println "Element" e)
+  ;(println "Element" e)
   (when (= "record" (:type e))
     (let [e-name (:name e)
           e-ns (get e :namespace schema-ns)]
@@ -231,6 +231,8 @@
   (vector? (:date types->avro))
   (optional? {:name "Notes", :type ["null" "string"]})
   (optional? {:name "SessionID", :type "long"})
+
+;  (println (conv/schema->model :avro {} (slurp "C:/PAG/datona/cluu/CcbChangeRequest.avsc")))
 
   (println (conv/model->schema :avro
                                {}

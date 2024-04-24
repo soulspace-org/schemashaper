@@ -5,39 +5,39 @@
             [org.soulspace.schemashaper.application.conversion :as conv]))
 
 (def edmx->types
-  {"Edm.Byte"           :byte
-   "Edm.Int16"          :short
-   "Edm.Int32"          :int
-   "Edm.Int64"          :long
-   "Edm.Single"         :float
-   "Edm.Double"         :double
-   "Edm.Decimal"        :decimal
-   "Edm.Boolean"        :boolean
-   "Edm.String"         :string
-   "Edm.Guid"           :uuid
-   "Edm.Date"           :date             ; TODO
-   "Edm.TimeOfDay"      :time             ; TODO
-   "Edm.Duration"       :duration         ; TODO
-   "Edm.DateTimeOffset" :date-time-offset ; TODO
-   "Edm.Binary"         :binary})
+  {"Edm.Byte"           "byte"
+   "Edm.Int16"          "short"
+   "Edm.Int32"          "int"
+   "Edm.Int64"          "long"
+   "Edm.Single"         "float"
+   "Edm.Double"         "double"
+   "Edm.Decimal"        "decimal"
+   "Edm.Boolean"        "boolean"
+   "Edm.String"         "string"
+   "Edm.Guid"           "uuid"
+   "Edm.Date"           "date"             ; TODO
+   "Edm.TimeOfDay"      "time"             ; TODO
+   "Edm.Duration"       "duration"         ; TODO
+   "Edm.DateTimeOffset" "date-time-offset" ; TODO
+   "Edm.Binary"         "binary"})
 
 (def types->edmx
-  {:byte     "Edm.Byte"
-   :short    "Edm.Int16"
-   :int      "Edm.Int32"
-   :long     "Edm.Int64"
-   :float    "Edm.Single"
-   :double   "Edm.Double"
-   :decimal  "Edm.Decimal"
-   :boolean  "Edm.Boolean"
-   :string   "Edm.String"
-   :uuid     "Edm.Guid"
-   :binary   "Edm.Binary"
-   :enum     "Edm.String"
-   :date     "Edm.Date"                   ; TODO
-   :time     "Edm.TimeOfDay"              ; TODO
-   :duration "Edm.Duration"               ; TODO
-   :date-time-offset "Edm.DateTimeOffset" ; TODO
+  {"byte"     "Edm.Byte"
+   "short"    "Edm.Int16"
+   "int"      "Edm.Int32"
+   "long"     "Edm.Int64"
+   "float"    "Edm.Single"
+   "double"   "Edm.Double"
+   "decimal"  "Edm.Decimal"
+   "boolean"  "Edm.Boolean"
+   "string"   "Edm.String"
+   "uuid"     "Edm.Guid"
+   "binary"   "Edm.Binary"
+   "enum"     "Edm.String"
+   "date"     "Edm.Date"                   ; TODO
+   "time"     "Edm.TimeOfDay"              ; TODO
+   "duration" "Edm.Duration"               ; TODO
+   "date-time-offset" "Edm.DateTimeOffset" ; TODO
    })
 
 (defn edmx-type->model-type

@@ -18,7 +18,13 @@
    "map"     :map
    "bytes"   :binary
    "fixed"   :string
-   "record"  :class})
+   "record"  :class
+   {:type "string" :logical-type "uuid"} :uuid
+   {:type "int"  :logical-type "date"} :date
+   {:type "int"  :logical-type "time-millis"} :time
+   {:type "long" :logical-type "local-timestamp-millis"} :date-time-offset
+   ;
+   })
 
 (def types->avro
   {:nil              "null"
@@ -45,31 +51,39 @@
 
 (defn optional?
   "Returns true, if the element is optional."
-  [e]
-  (let [t (:type e)
+  [e-type]
+  (let [t e-type
         t-set (set t)]
     (and (vector? t) (contains? t-set "null"))))
 
-(defn base-type
-  "Returns the base type of the element."
-  [e]
-  (let [t (:type e)
-        t-set (set t)
-        base-set (set/difference t-set #{"null"})]
-    (if (= 1 (count base-set))
-      (first base-set)
-      base-set)))
+(defn model-type
+  "Returns the model type for the avro type of element `e`."
+  [e-type]
+  (let [t (get avro->types e-type e-type)]
+    (println "Model Type" t)
+    t)
+  )
 
 (defn avro-type
-  "Returns the avro type of the type."
-  [e]
-  (let [t (get types->avro (:type e) (:type e))]
-    (println "Element" e)
+  "Returns the avro type of the model type of element `e`."
+  [e-type]
+  (let [t (get types->avro e-type e-type)]
     (println "AVRO Type" t)
     (if (vector? t)
       {:type (first t)
        :logical-type (second t)}
       t)))
+
+(defn base-type
+  "Returns the base type of the element."
+  [e-type]
+  (let [t-set (set e-type)
+        base-set (set/difference t-set #{"null"})]
+    (println "T-Set" t-set)
+    (println "Base-Set" base-set)
+    (if (= 1 (count base-set))
+      (model-type (first base-set))
+      base-set)))
 
 (defn class-id
   "Returns an id for the class."
@@ -94,23 +108,27 @@
 ;;
 (defn avro-field->model-field
   "Returns a model field for the avro field."
-  [schema-ns e]
-  {:el :field
-   :name (:name e)
-   :optional (optional? e)
-   :type (base-type e)})
+  [schema-ns criteria e]
+  (let [e-type (:type e)]
+    {:el :field
+     :name (:name e)
+     :optional (optional? e-type)
+     :type (base-type e-type)}))
 
 (defn avro-record->model-class
   "Returns a model class for the avro record."
   [schema-ns criteria e]
-  (let [e-name (:name e)
-        e-ns (get e :namespace schema-ns)]
-    {:el :class
-     :id (class-id e-ns e-name)
-     :name e-name
-     :ct (into []
-               (map (partial avro-field->model-field e-ns criteria)
-                    (:fields e)))}))
+  (println "Element" e)
+  (when (= "record" (:type e))
+    (let [e-name (:name e)
+          e-ns (get e :namespace schema-ns)]
+      {:el :class
+       :id (class-id e-ns e-name)
+       :avro/type "record"
+       :name e-name
+       :ct (into []
+                 (map (partial avro-field->model-field e-ns criteria)
+                      (:fields e)))})))
 
 (defn avro->enum->model-enum
   "Returns a model enum for the avro enum."
@@ -119,6 +137,7 @@
         e-ns (get e :namespace schema-ns)]
     {:el :enum
      :id (class-id e-ns e-name)
+     :avro/type "enum"
      :name e-name
      ; TODO define values in model
      }))
@@ -133,22 +152,22 @@
     (:collection e)
     {:name (:name e)
      :type {:type "array"
-            :items (avro-type e)
+            :items (avro-type (:type e))
             :default []}}
 
     (:map e)
     {:name (:name e)
      :type {:type "map"
-            :values (avro-type e)
+            :values (avro-type (:type e))
             :default {}}}
 
     (:optional e)
     {:name (:name e)
-     :type ["null" (avro-type e)]}
+     :type ["null" (avro-type (:type e))]}
 
     :else
     {:name (:name e)
-     :type (avro-type e)}))
+     :type (avro-type (:type e))}))
 
 (defn model-enum->avro-enum
   "Returns an avro enum for the model enum."
@@ -180,12 +199,19 @@
 ;;
 ;; Conversion functions for AVRO
 ;;
+(defn json-read-str
+  ""
+  [input]
+  (json/read-str input :key-fn keyword))
+
 (defmethod conv/schema->model :avro
   ([format input]
    (conv/schema->model format {} input))
   ([format criteria input]
    (->> input
-        (json/read-str))
+        (json-read-str)
+        (map (partial avro-record->model-class "schema" criteria))
+        )
    ; TODO
    ))
 
@@ -199,6 +225,8 @@
 
 (comment
   (json/read-str (slurp "examples/sap-sample-avro.json") :key-fn keyword)
+  (model-type {:type {:type "long" :logical-type "local-timestamp-millis"}})
+  (base-type {:type ["null" {:type "long" :logical-type "local-timestamp-millis"}]})
   (vector? (:uuid types->avro))
   (vector? (:date types->avro))
   (optional? {:name "Notes", :type ["null" "string"]})

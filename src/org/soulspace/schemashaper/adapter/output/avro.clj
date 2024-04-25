@@ -97,7 +97,7 @@
        (into [])))
 
 ;;
-;; Conversion functions for AVRO
+;; Conversion to AVRO schema
 ;;
 (defmethod conv/model->schema :avro
   ([format coll]

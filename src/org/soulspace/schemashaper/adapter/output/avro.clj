@@ -2,7 +2,8 @@
   (:require [clojure.string :as str]
             [clojure.data.json :as json]
             ;[org.soulspace.schemashaper.domain.model :as model]
-            [org.soulspace.schemashaper.application.conversion :as conv]))
+            [org.soulspace.schemashaper.application.conversion :as conv]
+            [org.soulspace.schemashaper.domain.model :as model]))
 
 (def types->avro
   {"nil"              "null"
@@ -95,6 +96,58 @@
        (:ct)
        (map (partial model-class->avro-record (:name e) config))
        (into [])))
+
+; TODO use model->avro instead of old methods
+(defmulti model->avro
+  "Renders the AVRO representation of the model element `e`."
+  model/element-type)
+
+(defmethod model->avro :class
+  [schema-ns config e]
+  {:type "record"
+   :name (:name e)
+   :doc (if-let [doc (:desc e)] doc "")
+   :fields (into []
+                 (map (partial model-field->avro-field schema-ns config)
+                      (:ct e)))})
+
+(defmethod model->avro :enum
+  [e]
+  {:type "enum"
+   :name (:name e)
+   :doc (if-let [doc (:desc e)] doc "")
+   :symbols (into [] (map model->avro (:ct e)))})
+
+(defmethod model->avro :enum-value
+  [e]
+  (:name e))
+
+(defmethod model->avro :field
+  [e]
+  (cond
+    (:collection e)
+    {:name (:name e)
+     :doc (if-let [doc (:desc e)] doc "")
+     :type {:type "array"
+            :items (avro-type (:type e))
+            :default []}}
+
+    (:map e)
+    {:name (:name e)
+     :doc (if-let [doc (:desc e)] doc "")
+     :type {:type "map"
+            :values (avro-type (:type e))
+            :default {}}}
+
+    (:optional e)
+    {:name (:name e)
+     :doc (if-let [doc (:desc e)] doc "")
+     :type ["null" (avro-type (:type e))]}
+
+    :else
+    {:name (:name e)
+    :doc (if-let [doc (:desc e)] doc "")
+    :type (avro-type (:type e))}))
 
 ;;
 ;; Conversion to AVRO schema

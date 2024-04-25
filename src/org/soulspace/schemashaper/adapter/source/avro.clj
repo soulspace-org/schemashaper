@@ -33,6 +33,8 @@
         t-set (set t)]
     (and (vector? t) (contains? t-set "null"))))
 
+
+; TODO handle type maps consistently (arrays, maps, records, ...)
 (defn model-type
   "Returns the model type for the avro type of element `e`."
   [e-type]

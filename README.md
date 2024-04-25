@@ -17,7 +17,7 @@ Supported output schemas:
  * overarch ([Overarch](https://github.com/soulspace-org/overarch)
   [Class Model](https://github.com/soulspace-org/overarch/blob/main/doc/usage.md#class-model))
 
-The Overarch output can be used to visualize the schema in an UML class diagram.
+The Overarch output can be used to visualize schemas in an UML class diagram.
 
 ### Limitations
 SchemaShaper may use only parts of the input schema relevant to data transfer.

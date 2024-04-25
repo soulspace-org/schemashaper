@@ -1,4 +1,4 @@
-(ns org.soulspace.schemashaper.adapter.edmx-test
+(ns org.soulspace.schemashaper.adapter.source.edmx-test
   (:require [clojure.test :refer :all]
             [org.soulspace.schemashaper.adapter.edmx :refer :all]))
 

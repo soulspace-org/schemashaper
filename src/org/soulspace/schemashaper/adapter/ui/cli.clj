@@ -1,4 +1,4 @@
-(ns org.soulspace.schemashaper.adapter.cli
+(ns org.soulspace.schemashaper.adapter.ui.cli
   (:require [clojure.string :as str]
             [clojure.data.json :as json]
             [clojure.data.xml :as xml]
@@ -6,10 +6,16 @@
             [org.soulspace.schemashaper.domain.model :as model]
             [org.soulspace.schemashaper.application.conversion :as conv]
             ; require adapters to register multimethods
-            [org.soulspace.schemashaper.adapter.avro :as avro]
-            [org.soulspace.schemashaper.adapter.edmx :as edmx]
-            [org.soulspace.schemashaper.adapter.overarch :as overarch]
-            [org.soulspace.schemashaper.adapter.protobuf :as proto]
+            ; sources
+            [org.soulspace.schemashaper.adapter.source.avro :as avro-src]
+            [org.soulspace.schemashaper.adapter.source.edmx :as edmx-src]
+            [org.soulspace.schemashaper.adapter.source.overarch :as overarch-src]
+            [org.soulspace.schemashaper.adapter.source.protobuf :as proto-src]
+            ; targets
+            [org.soulspace.schemashaper.adapter.target.avro :as avro-tgt]
+            [org.soulspace.schemashaper.adapter.target.edmx :as edmx-tgt]
+            [org.soulspace.schemashaper.adapter.target.overarch :as overarch-tgt]
+            [org.soulspace.schemashaper.adapter.target.protobuf :as proto-tgt]
             [clojure.edn :as edn])
   (:gen-class))
 

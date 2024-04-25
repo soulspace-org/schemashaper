@@ -1,4 +1,4 @@
-(ns org.soulspace.schemashaper.adapter.edmx
+(ns org.soulspace.schemashaper.adapter.source.edmx
   (:require [clojure.string :as str]
             [clojure.data.xml :as xml]
             ;[org.soulspace.schemashaper.domain.model :as model]
@@ -21,25 +21,6 @@
    "Edm.DateTimeOffset" "date-time-offset" ; TODO
    "Edm.Binary"         "binary"})
 
-(def types->edmx
-  {"byte"     "Edm.Byte"
-   "short"    "Edm.Int16"
-   "int"      "Edm.Int32"
-   "long"     "Edm.Int64"
-   "float"    "Edm.Single"
-   "double"   "Edm.Double"
-   "decimal"  "Edm.Decimal"
-   "boolean"  "Edm.Boolean"
-   "string"   "Edm.String"
-   "uuid"     "Edm.Guid"
-   "binary"   "Edm.Binary"
-   "enum"     "Edm.String"
-   "date"     "Edm.Date"                   ; TODO
-   "time"     "Edm.TimeOfDay"              ; TODO
-   "duration" "Edm.Duration"               ; TODO
-   "date-time-offset" "Edm.DateTimeOffset" ; TODO
-   })
-
 (defn edmx-type->model-type
   "Returns the model type for the qualified edmx type `t`.
    
@@ -47,14 +28,6 @@
    Otherwise t is returned as is."
   [t]
   (get edmx->types t t))
-
-(defn model-type->edmx-type
-  "Returns the qualified edmx type for the model type `t`.
-   
-   If t is a model base type, the corresponding edmx base type is returned.
-   Otherwise t is returned as is."
-  [t]
-  (get types->edmx t t))
 
 (defn optional?
   "Returns true if the element `e` is optional (nullable)."
@@ -147,8 +120,8 @@
 
 (defn include?
   "Returns true if the element `e` is included by the given `criteria`."
-  [criteria e]
-  (if-let [include-set (:include-set criteria)]
+  [config e]
+  (if-let [include-set (:include-set config)]
     (if (contains? include-set e)
       true
       false)
@@ -157,8 +130,8 @@
 
 (defn exclude?
   "Returns true if the element `e` is excluded by the given `criteria`."
-  [criteria e]
-  (if-let [exclude-set (:exclude-set criteria)]
+  [config e]
+  (if-let [exclude-set (:exclude-set config)]
     (if (contains? exclude-set e)
       true
       false)
@@ -167,7 +140,7 @@
 
 (defn include-element?
   "Returns true if the element with the `qualified-name` is included by the given `criteria`."
-  [criteria qualified-name]
+  [config qualified-name]
   (if (edm-type? qualified-name)
     ; always include Edm base types
     true
@@ -176,8 +149,8 @@
 ;                      (not (exclude? criteria qualified-name)))]
 ;      (println "Check for result for" qualified-name "is" result)
 ;      result)
-    (and (include? criteria qualified-name)
-         (not (exclude? criteria qualified-name)))
+    (and (include? config qualified-name)
+         (not (exclude? config qualified-name)))
     ))
 
 (defn name->id
@@ -201,12 +174,12 @@
 
 (defn edmx-property->model-field
   "Returns a model field for the property element `e` in the context of the `schema-ns`."
-  [schema-ns criteria {:keys [tag attrs content] :as e}]
+  [schema-ns config {:keys [tag attrs content] :as e}]
   (when (contains? #{:Property :NavigationProperty} tag)
     (let [e-name (:Name attrs)
           type-map (parse-type-name (get attrs :Type (qualified-name schema-ns (:ToRole attrs))))
           qualified-type (:qualified-name type-map)]
-      (when (include-element? criteria qualified-type)
+      (when (include-element? config qualified-type)
         (if (:collection type-map)
           {:el :field
            :edmx/tag tag
@@ -221,22 +194,22 @@
            :type (get edmx->types qualified-type qualified-type)})))))
 
 (defn edmx-fields->model-fields
-  [schema-ns criteria tag content]
+  [schema-ns config tag content]
   (->> content
        (filter (tag-pred tag))
        (map (partial edmx-property->model-field
-                     schema-ns criteria))
+                     schema-ns config))
        (remove nil?)))
 
 (defn edmx-entity-type->model-class
   "Returns a model class for the EntityType element `e` in the context of the `schema-ns`."
-  [schema-ns criteria {:keys [tag attrs content] :as e}]
+  [schema-ns config {:keys [tag attrs content] :as e}]
   (when (contains? #{:EntityType} tag)
     (let [e-name (:Name attrs)
           qname (qualified-name e-name schema-ns)
-          ct (into [] (concat (edmx-fields->model-fields schema-ns criteria :Property content)
-                              (edmx-fields->model-fields schema-ns criteria :NavigationProperty content)))]
-      (when (include-element? criteria
+          ct (into [] (concat (edmx-fields->model-fields schema-ns config :Property content)
+                              (edmx-fields->model-fields schema-ns config :NavigationProperty content)))]
+      (when (include-element? config
                               qname)
         {:el :class
          :edmx/tag tag
@@ -248,17 +221,17 @@
 
 (defn edmx-entity-types->model-classes
   "Returns a vector of model classes for the elements with `tag` in the `content`."
-  [schema-ns criteria tag content]
+  [schema-ns config tag content]
   (->> content
        (filter (tag-pred tag))
        (map (partial edmx-entity-type->model-class
-                     schema-ns criteria))
+                     schema-ns config))
        (remove nil?)
        (into [])))
 
 (defn edmx-member->model-enum-value
   "Returns a model enum for the EnumType element `e` in the context of the `schema-ns`."
-  [schema-ns criteria {:keys [tag attrs content] :as e}]
+  [schema-ns config {:keys [tag attrs content] :as e}]
     (let [e-name (:Name attrs)
           e-value (:Value attrs)]
       ; TODO name :el type?
@@ -271,11 +244,11 @@
 
 (defn edmx-enum-type->model-enum
   "Returns a model enum for the EnumType element `e` in the context of the `schema-ns`."
-  [schema-ns criteria {:keys [tag attrs content] :as e}]
+  [schema-ns config {:keys [tag attrs content] :as e}]
   (when (contains? #{:EnumType} tag)
     (let [e-name (:Name attrs)
           qname (qualified-name e-name schema-ns)]
-      (when (include-element? criteria qname)
+      (when (include-element? config qname)
         {:el :enum
          :edmx/tag tag
          :edmx/schema-ns schema-ns
@@ -286,34 +259,34 @@
 
 (defn edmx-association->model-relation
   "Returns a model relation for the Association element in the context of the `schema-ns`."
-  [schema-ns criteria {:keys [tag attrs content] :as e}]
+  [schema-ns config {:keys [tag attrs content] :as e}]
   (when (contains? #{:Association} tag)))
 
 (defn edmx-associations->model-relations
-  [schema-ns criteria tag content]
+  [schema-ns config tag content]
   (->> content
        (filter (tag-pred tag))
        (map (partial edmx-association->model-relation
-                     schema-ns criteria))
+                     schema-ns config))
        (remove nil?)
        (into [])))
 
 (defn edmx-schema->model-namespace
   "Returns a model namespace for the Schema element."
-  [criteria {:keys [tag attrs content] :as e}]
+  [config {:keys [tag attrs content] :as e}]
   (when (contains? #{:Schema} tag)
     (let [schema-ns (:Namespace attrs)]
       {:el :namespace
        :id (namespace-id schema-ns)
        :name schema-ns
-       :ct (edmx-entity-types->model-classes schema-ns criteria :EntityType content)})))
+       :ct (edmx-entity-types->model-classes schema-ns config :EntityType content)})))
 
 (defn edmx-schemas->model-namespaces
   "Returns the model namespaces for the Schema elements in content."
-  [criteria tag content]
+  [config tag content]
   (->> content
        (filter (tag-pred tag))
-       (map (partial edmx-schema->model-namespace criteria))
+       (map (partial edmx-schema->model-namespace config))
        (remove nil?)
        (into [])))
 
@@ -333,25 +306,18 @@
          (filter (tag-pred :DataServices))
          first)))
 
-
 ;;
 ;; Conversion functions for EDMX
 ;;
 (defmethod conv/schema->model :edmx
   ([format input]
    (conv/schema->model format {} input))
-  ([format criteria input]
+  ([format config input]
    (let [edmx (xml/parse-str input)
 ;         _ (println "EDMX" edmx)
          data-service (edmx-data-service edmx)
-         model (edmx-schemas->model-namespaces criteria :Schema (:content data-service))]
+         model (edmx-schemas->model-namespaces config :Schema (:content data-service))]
      model)))
-
-(defmethod conv/model->schema :edmx 
-  ([format coll]
-   (conv/model->schema format {} coll))
-  ([format criteria coll]
-   ))
 
 (comment
   (keyword (str/replace "Bla.Fasel_Foo" "_" "/"))

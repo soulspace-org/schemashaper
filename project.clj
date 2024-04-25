@@ -6,7 +6,7 @@
                  [org.clojure/tools.cli "1.0.206"]
                  ;[instaparse "1.4.14"]
                  ]
-  :repl-options {:init-ns org.soulspace.schemashaper.adapter.cli}
+  :repl-options {:init-ns org.soulspace.schemashaper.adapter.ui.cli}
 
   :profiles {:dev {:dependencies [[djblue/portal "0.49.1"]
                                   [criterium/criterium "0.4.6"]
@@ -16,7 +16,7 @@
                    :global-vars {*warn-on-reflection* true}}}
 
   :uberjar-name "schemashaper.jar"
-  :main org.soulspace.schemashaper.adapter.cli
+  :main org.soulspace.schemashaper.adapter.ui.cli
 
 ;  :scm {:name "git" :url "https://github.com/soulspace-org/schemashaper"}
 ;  :deploy-repositories [["clojars" {:sign-releases false :url "https://clojars.org/repo"}]]

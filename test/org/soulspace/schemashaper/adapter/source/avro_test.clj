@@ -1,4 +1,4 @@
-(ns org.soulspace.schemashaper.adapter.avro-test
+(ns org.soulspace.schemashaper.adapter.source.avro-test
   (:require [clojure.test :refer :all]
             [org.soulspace.schemashaper.adapter.avro :refer :all]))
 

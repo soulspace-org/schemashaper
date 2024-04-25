@@ -1,4 +1,4 @@
-(ns org.soulspace.schemashaper.adapter.protobuf-test
+(ns org.soulspace.schemashaper.adapter.source.protobuf-test
   (:require [clojure.test :refer :all]
             [org.soulspace.schemashaper.adapter.protobuf :refer :all]))
 

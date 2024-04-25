@@ -3,7 +3,7 @@
   :dependencies [[org.clojure/clojure "1.11.1"]
                  [org.clojure/tools.cli "1.0.206"]
                  [org.clojure/data.xml "0.0.8"]            ; EDMX/OData
-                 [org.clojure/data.json "2.3.0"]           ; AVRO
+                 [org.clojure/data.json "2.5.0"]           ; AVRO
                  [clj-commons/clj-yaml "1.0.27"]           ; OpenAPI
                  [com.github.s-expresso/rubberbuf "0.2.1"] ; ProtoBuf
                  ;[instaparse "1.4.14"]

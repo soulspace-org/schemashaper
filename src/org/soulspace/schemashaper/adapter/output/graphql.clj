@@ -1,5 +1,6 @@
-(ns org.soulspace.schemashaper.adapter.output.graphql 
+(ns org.soulspace.schemashaper.adapter.output.graphql
   (:require [clojure.string :as str]
+            [org.soulspace.schemashaper.domain.model :as model]
             [org.soulspace.schemashaper.application.conversion :as conv]))
 
 ; TODO check and fix
@@ -27,28 +28,23 @@
    })
 
 (defn render-indent
-  "Renders an indent of n space chars."
+  "Renders an indent of `n` space chars."
   [n]
   (str/join (repeat n " ")))
 
 (defn base-type
-  ""
+  "Returns the base type of the element `e`."
   [e]
   (let [b-type (get type->graphql (:type e) (:type e))]
     b-type))
 
 (defn optional?
-  ""
+  "Returs true, if the element `e` is optional."
   [e]
   (boolean (:optional e)))
 
-(defn element-type
-  "Returns the element type."
-  ([e] (:el e))
-  ([indent e] (:el e)))
-
 (defn model-type->graphql-type
-  ""
+  "Returns the GrapQL for the model type."
   [e]
   (let [b-type (base-type e)]
     (if (:collection e)
@@ -59,7 +55,7 @@
 
 (defmulti model->graphql
   "Renders the GraphQL representation of the model element `e`."
-  element-type)
+  model/element-type)
 
 (defn model-fields->graphql-fields
   "Renders the GraphQL fields for the model fields in `coll`."
@@ -96,7 +92,7 @@
 (defmethod model->graphql :enum
   [indent e]
   (str (render-indent indent)
-       "type " (:name e) " {\n"
+       "enum " (:name e) " {\n"
        (model-enum-values->graphql-enum-values indent (:ct e))
        "\n" (render-indent indent)
        "}\n"))
@@ -108,11 +104,9 @@
   ([format coll]
    (conv/model->schema format {} coll))
   ([format config coll]
-   (->> coll
-;        (filter #(contains? #{:class} (:el %)))
-        (map (partial model->graphql 0)))))
-        (map (partial str/join "\n"))
-        
+   (let [query (->> coll
+                    (map (partial model->graphql 0))
+                    (map (partial str/join "\n")))])))
 
 (comment "Conversion tests"
   (def input #{{:el :class
@@ -139,6 +133,6 @@
                       :name "DIAMONDS"}]}})
   (println
    (conv/model->schema :graphql input))
-         
+
   ;
-)
+  )

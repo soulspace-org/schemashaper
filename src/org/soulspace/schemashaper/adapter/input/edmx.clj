@@ -1,7 +1,7 @@
 (ns org.soulspace.schemashaper.adapter.input.edmx
   (:require [clojure.string :as str]
             [clojure.data.xml :as xml]
-            ;[org.soulspace.schemashaper.domain.model :as model]
+            [org.soulspace.schemashaper.domain.model :as model]
             [org.soulspace.schemashaper.application.conversion :as conv]))
 
 (def edmx->types
@@ -118,26 +118,6 @@
   [t]
   (= "Edm" (:schema-ns (parse-type-name t))))
 
-(defn include?
-  "Returns true if the element `e` is included by the given `criteria`."
-  [config e]
-  (if-let [include-set (:include-set config)]
-    (if (contains? include-set e)
-      true
-      false)
-    ; include, if no include set is specified
-    true))
-
-(defn exclude?
-  "Returns true if the element `e` is excluded by the given `criteria`."
-  [config e]
-  (if-let [exclude-set (:exclude-set config)]
-    (if (contains? exclude-set e)
-      true
-      false)
-    ; don't exclude, if no exclude set is specified
-    false))
-
 (defn include-element?
   "Returns true if the element with the `qualified-name` is included by the given `criteria`."
   [config qualified-name]
@@ -145,13 +125,8 @@
     ; always include Edm base types
     true
     ; not a base type, check against criteria
-;    (let [result (and (include? criteria qualified-name)
-;                      (not (exclude? criteria qualified-name)))]
-;      (println "Check for result for" qualified-name "is" result)
-;      result)
-    (and (include? config qualified-name)
-         (not (exclude? config qualified-name)))
-    ))
+    (and (model/include? config qualified-name)
+         (not (model/exclude? config qualified-name)))))
 
 (defn name->id
   "Generates an id from a name."
@@ -331,14 +306,6 @@
   (qualified-name "Event" "ODataAPI")
   (edm-type? "Edm.Int32")
   (edm-type? "ODataAPI.Event")
-  (include? {} "ODataAPI.Event")
-  (include? {:include-set #{}} "ODataAPI.Event")
-  (include? {:include-set #{"ODataAPI.Event"}} "ODataAPI.Event")
-  (include? {:include-set #{"ODataAPI.Track"}} "ODataAPI.Event")
-  (exclude? {} "ODataAPI.Event")
-  (exclude? {:exclude-set #{}} "ODataAPI.Event")
-  (exclude? {:exclude-set #{"ODataAPI.Event"}} "ODataAPI.Event")
-  (exclude? {:exclude-set #{"ODataAPI.Track"}} "ODataAPI.Event")
 
   (def test-event-props
     [{:tag :Property

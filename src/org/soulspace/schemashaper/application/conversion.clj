@@ -78,11 +78,11 @@
         (schema->model input-format)
         (model->schema output-format)
         (write-file output-file)))
-  ([input-format input-file output-format output-file filter-file]
-   (let [filter (edn/read-string (slurp filter-file))]
+  ([input-format input-file output-format output-file config-file]
+   (let [config (edn/read-string (slurp config-file))]
      (->> input-file
           (slurp)
-          (schema->model input-format filter)
+          (schema->model input-format config)
 ;          (filter-elements filter-file)
-          (model->schema output-format filter)
+          (model->schema output-format config)
           (write-file output-file)))))

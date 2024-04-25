@@ -24,7 +24,7 @@
    ["-i" "--input-file FILENAME"  "Input file"]
    ["-O" "--output-format FORMAT" "Output format (avro, overarch)" :default :avro :parse-fn keyword]
    ["-o" "--output-file FILENAME" "Output file"]
-   ["-f" "--filter-file FILENAME" "optional EDN file with a filter definition"]
+   ["-c" "--config-file FILENAME" "optional EDN file with a conversion configuration"]
    ["-h" "--help"                 "Print help"]
    [nil  "--debug"                "Print debug information" :default false]])
 
@@ -86,11 +86,11 @@
 ;;;
 (defn handle
   "Handle the `options`."
-  [{:keys [input-format input-file output-format output-file filter-file] :as options}]
-  (if filter-file
+  [{:keys [input-format input-file output-format output-file config-file] :as options}]
+  (if config-file
     (do (println "Converting" input-file "from" input-format
-                 "to" output-format "as" output-file "using filter spec from" filter-file)
-        (conv/convert input-format input-file output-format output-file filter-file))
+                 "to" output-format "as" output-file "using config from" config-file)
+        (conv/convert input-format input-file output-format output-file config-file))
     (do (println "Converting" input-file "from" input-format
                  "to" output-format "as" output-file) 
         (conv/convert input-format input-file output-format output-file))))

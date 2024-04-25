@@ -49,7 +49,7 @@ Options:
   -i, --input-file FILENAME          Input file
   -O, --output-format FORMAT  :avro  Output format (avro, overarch)
   -o, --output-file FILENAME         Output file
-  -f, --filter-file FILENAME         optional EDN file with filter criteria
+  -c, --config-file FILENAME         optional EDN file with a conversion configuration
   -h, --help                         Print help
       --debug                        Print debug information
 ```

@@ -1,6 +1,5 @@
 (ns org.soulspace.schemashaper.adapter.output.protobuf
   (:require [clojure.string :as str]
-            [clojure.data.json :as json]
             [org.soulspace.schemashaper.domain.model :as model]
             [org.soulspace.schemashaper.application.conversion :as conv]))
 
@@ -40,6 +39,11 @@
    (map-indexed model-field->proto-field (filter #(= :field (:el %)) (:ct e)))
    (str "}")]
   )
+
+(defmulti model->proto
+  "Renders the ProtoBuffer representation of the model element `e`."
+  model/element-type)
+
 
 ;;
 ;; Conversion functions for ProtoBuf

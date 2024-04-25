@@ -1,5 +1,6 @@
 (ns org.soulspace.schemashaper.adapter.output.openapi
-  )
+  (:require [org.soulspace.schemashaper.domain.model :as model]
+            [org.soulspace.schemashaper.application.conversion :as conv]))
 
 ; TODO check and fix
 (def types->openapi
@@ -24,6 +25,22 @@
    "date-time-offset" ["long" "local-timestamp-millis"]
    ;"duration"         ""
    })
+
+(defmulti model->openapi
+  "Renders the OpenAPI representation of the model element `e`."
+  model/element-type)
+
+(defmethod model->openapi :class
+  [e])
+
+(defmethod model->openapi :enum
+  [e])
+
+(defmethod model->openapi :field
+  [e])
+
+(defmethod model->openapi :enum-value
+  [e])
 
 ;;
 ;; Conversion to OpenAPI schema

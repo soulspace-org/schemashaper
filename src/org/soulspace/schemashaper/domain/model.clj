@@ -1,9 +1,16 @@
 (ns org.soulspace.schemashaper.domain.model
   )
 
-(def types #{:byte :short :int :long :float :double :decimal :boolean :string
-             :uuid :binary :instant :date :time :duration :date-time-offset
-             :list :map :set :class})
+(def model-nodes
+  #{:class :field :method :enum :enum-value})
+
+(def model-relations
+  #{:composition :aggregation :association})
+
+(def types
+  #{:byte :short :int :long :float :double :decimal :boolean :string
+    :uuid :binary :instant :date :time :duration :date-time-offset
+    :list :map :set :class})
 
 (defn include?
   "Returns true if the element `e` is included by the given `criteria`."

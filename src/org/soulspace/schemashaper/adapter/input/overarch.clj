@@ -1,4 +1,4 @@
-(ns org.soulspace.schemashaper.adapter.source.overarch
+(ns org.soulspace.schemashaper.adapter.input.overarch
   (:require [clojure.edn :as edn]
             [org.soulspace.schemashaper.application.conversion :as conv]))
 

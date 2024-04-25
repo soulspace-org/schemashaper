@@ -1,4 +1,4 @@
-(ns org.soulspace.schemashaper.adapter.source.protobuf
+(ns org.soulspace.schemashaper.adapter.input.protobuf
   (:require [clojure.string :as str]
             [clojure.data.json :as json]
             [org.soulspace.schemashaper.domain.model :as model]

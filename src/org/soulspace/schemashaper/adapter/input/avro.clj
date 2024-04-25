@@ -1,4 +1,4 @@
-(ns org.soulspace.schemashaper.adapter.source.avro
+(ns org.soulspace.schemashaper.adapter.input.avro
   (:require [clojure.string :as str]
             [clojure.set :as set]
             [clojure.data.json :as json]

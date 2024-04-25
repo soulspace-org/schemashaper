@@ -7,15 +7,15 @@
             [org.soulspace.schemashaper.application.conversion :as conv]
             ; require adapters to register multimethods
             ; sources
-            [org.soulspace.schemashaper.adapter.source.avro :as avro-src]
-            [org.soulspace.schemashaper.adapter.source.edmx :as edmx-src]
-            [org.soulspace.schemashaper.adapter.source.overarch :as overarch-src]
-            [org.soulspace.schemashaper.adapter.source.protobuf :as proto-src]
+            [org.soulspace.schemashaper.adapter.input.avro :as avro-src]
+            [org.soulspace.schemashaper.adapter.input.edmx :as edmx-src]
+            [org.soulspace.schemashaper.adapter.input.overarch :as overarch-src]
+            [org.soulspace.schemashaper.adapter.input.protobuf :as proto-src]
             ; targets
-            [org.soulspace.schemashaper.adapter.target.avro :as avro-tgt]
-            [org.soulspace.schemashaper.adapter.target.edmx :as edmx-tgt]
-            [org.soulspace.schemashaper.adapter.target.overarch :as overarch-tgt]
-            [org.soulspace.schemashaper.adapter.target.protobuf :as proto-tgt]
+            [org.soulspace.schemashaper.adapter.output.avro :as avro-tgt]
+            [org.soulspace.schemashaper.adapter.output.edmx :as edmx-tgt]
+            [org.soulspace.schemashaper.adapter.output.overarch :as overarch-tgt]
+            [org.soulspace.schemashaper.adapter.output.protobuf :as proto-tgt]
             [clojure.edn :as edn])
   (:gen-class))
 

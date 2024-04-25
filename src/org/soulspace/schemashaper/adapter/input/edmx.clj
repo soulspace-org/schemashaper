@@ -1,4 +1,4 @@
-(ns org.soulspace.schemashaper.adapter.source.edmx
+(ns org.soulspace.schemashaper.adapter.input.edmx
   (:require [clojure.string :as str]
             [clojure.data.xml :as xml]
             ;[org.soulspace.schemashaper.domain.model :as model]

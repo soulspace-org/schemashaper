@@ -6,16 +6,18 @@
             [org.soulspace.schemashaper.domain.model :as model]
             [org.soulspace.schemashaper.application.conversion :as conv]
             ; require adapters to register multimethods
-            ; sources
-            [org.soulspace.schemashaper.adapter.input.avro :as avro-src]
-            [org.soulspace.schemashaper.adapter.input.edmx :as edmx-src]
-            [org.soulspace.schemashaper.adapter.input.overarch :as overarch-src]
-            [org.soulspace.schemashaper.adapter.input.protobuf :as proto-src]
-            ; targets
-            [org.soulspace.schemashaper.adapter.output.avro :as avro-tgt]
-            [org.soulspace.schemashaper.adapter.output.edmx :as edmx-tgt]
-            [org.soulspace.schemashaper.adapter.output.overarch :as overarch-tgt]
-            [org.soulspace.schemashaper.adapter.output.protobuf :as proto-tgt]
+            ; input adapters
+            [org.soulspace.schemashaper.adapter.input.avro :as avro-in]
+            [org.soulspace.schemashaper.adapter.input.edmx :as edmx-in]
+            [org.soulspace.schemashaper.adapter.input.overarch :as overarch-in]
+            [org.soulspace.schemashaper.adapter.input.protobuf :as proto-in]
+            ; output adapters
+            [org.soulspace.schemashaper.adapter.output.avro :as avro-out]
+            [org.soulspace.schemashaper.adapter.output.edmx :as edmx-out]
+            [org.soulspace.schemashaper.adapter.output.overarch :as overarch-out]
+            [org.soulspace.schemashaper.adapter.output.protobuf :as proto-out]
+            [org.soulspace.schemashaper.adapter.output.graphql :as graphql-out]
+            [org.soulspace.schemashaper.adapter.output.openapi :as openapi-out]
             [clojure.edn :as edn])
   (:gen-class))
 

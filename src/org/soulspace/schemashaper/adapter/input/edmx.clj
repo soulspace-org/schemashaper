@@ -142,10 +142,12 @@
 (defn namespace-id
   "Generates an id for the namespace"
   [schema-ns]
-    (let [parts (str/split schema-ns #"\.")
-          ns-parts (drop-last parts)
-          name-part (last parts)]
-      (keyword (str/join "/" [(str/join "." ns-parts) name-part]))))
+  (let [parts (str/split schema-ns #"\.")
+        ns-parts (drop-last parts)
+        name-part (last parts)]
+    (if (seq ns-parts)
+      (keyword (str/join "/" [(str/join "." ns-parts) name-part]))
+      (keyword name-part))))
 
 (defn edmx-property->model-field
   "Returns a model field for the property element `e` in the context of the `schema-ns`."

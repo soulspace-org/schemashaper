@@ -70,15 +70,6 @@
     {:name (:name e)
      :type (avro-type (:type e))}))
 
-(defn model-enum->avro-enum
-  "Returns an avro enum for the model enum."
-  [schema-ns config e]
-  {:type "enum"
-   :name (:name e)
-   ; TODO define values in model
-   :symbols (into [] (keys (:values e)))}
-  )
-
 (defn model-class->avro-record
   "Returns an avro record for the model class."
   [schema-ns config e]
@@ -108,7 +99,7 @@
    :name (:name e)
    :doc (if-let [doc (:desc e)] doc "")
    :fields (into []
-                 (map (partial model-field->avro-field schema-ns config)
+                 (map (partial model->avro schema-ns config)
                       (:ct e)))})
 
 (defmethod model->avro :enum

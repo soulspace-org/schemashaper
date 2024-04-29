@@ -21,38 +21,33 @@
    "class"   "message"})
 
 
-(defn model-field->proto-field
-  "Returns the proto schema for a model field."
+(defmulti model->proto
+  "Renders the ProtoBuffer representation of the model element `e`."
+  model/element-type)
+
+(defmethod model->proto :field
   [idx e]
   (str "  "
        (when (:optional e) "optional ")
        (:name e)
-       " = " idx
-       )
-  ; TODO
-  )
+       " = " idx "\n"))
 
-(defn model-class->proto-message
-  "Returns the proto schema for a model class."
+(defmethod model->proto :class
   [e]
   [(str "message " (:name e) " {")
-   (map-indexed model-field->proto-field (filter #(= :field (:el %)) (:ct e)))
-   (str "}")]
-  )
+   (map-indexed model->proto (:ct e))
+   (str "}")])
 
-(defmulti model->proto
-  "Renders the ProtoBuffer representation of the model element `e`."
-  model/element-type)
+(defmethod model->proto :enum-value
+  [e])
+
+(defmethod model->proto :enum
+  [e])
 
 
 ;;
 ;; Conversion functions for ProtoBuf
 ;;
-(defmethod conv/schema->model :proto
-  ([format input]
-   (conv/schema->model format {} input))
-  ([format config input]))
-
 (defmethod conv/model->schema :proto
   ([format coll]
    (conv/model->schema format {} coll))

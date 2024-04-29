@@ -163,12 +163,12 @@
            :name e-name
            :collection :list
            :card :zero-to-many
-           :type (get edmx->types qualified-type qualified-type)}
+           :type (edmx-type->model-type qualified-type)}
           {:el :field
            :edmx/tag tag
            :name e-name
            :optional (optional? e)
-           :type (get edmx->types qualified-type qualified-type)})))))
+           :type (edmx-type->model-type qualified-type)})))))
 
 (defn edmx-fields->model-fields
   [schema-ns config tag content]

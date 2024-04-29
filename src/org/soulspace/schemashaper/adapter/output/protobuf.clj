@@ -44,6 +44,10 @@
 (defmethod model->proto :enum
   [e])
 
+(defmethod model->proto :namespace
+  [e]
+  (map model->proto (:ct e)))
+
 
 ;;
 ;; Conversion functions for ProtoBuf
@@ -52,7 +56,7 @@
   ([format coll]
    (conv/model->schema format {} coll))
   ([format config coll]
-   (into [] (map model-class->proto-message coll))))
+   (into [] (mapcat model->proto coll))))
 
 (comment
   (map-indexed #(println %1 %2) ["a" "b" "c"])

@@ -48,7 +48,6 @@
   [e]
   (map model->proto (:ct e)))
 
-
 ;;
 ;; Conversion functions for ProtoBuf
 ;;

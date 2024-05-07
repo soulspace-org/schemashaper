@@ -124,7 +124,8 @@
   (conv/schema->model :edmx (slurp "examples/sap-sample-edmx.xml"))
 
   (-main)
-  (-main "-i" "dev/sap-sample-edmx.xml" "-o" "sap-sample-edmx.json" "--debug")
-  (-main "-i" "dev/sap-sample-edmx.xml" "-O" "graphql" "-o" "sap-sample.graphql" "--debug")
+  (-main "-i" "examples/sap-sample-edmx.xml" "-o" "sap-sample-edmx.json" "--debug")
+  (-main "-i" "examples/sap-sample-edmx.xml" "-O" "overarch" "-o" "sap-sample.edn" "--debug")
+  (-main "-i" "examples/sap-sample-edmx.xml" "-O" "graphql" "-o" "sap-sample.graphql" "--debug")
   ;
   )

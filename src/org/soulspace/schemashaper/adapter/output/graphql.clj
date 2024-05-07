@@ -104,9 +104,12 @@
   ([format coll]
    (conv/model->schema format {} coll))
   ([format config coll]
+   (println "model->schema")
    (let [query (->> coll
                     (map (partial model->graphql 0))
-                    (map (partial str/join "\n")))])))
+                    (partial str/join "\n")
+                    )]
+     query)))
 
 (comment "Conversion tests"
   (def input #{{:el :class

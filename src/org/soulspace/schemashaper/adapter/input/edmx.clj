@@ -154,7 +154,7 @@
   [schema-ns config {:keys [tag attrs content] :as e}]
   (when (contains? #{:Property :NavigationProperty} tag)
     (let [e-name (:Name attrs)
-          type-map (parse-type-name (get attrs :Type (qualified-name schema-ns (:ToRole attrs))))
+          type-map (parse-type-name (get attrs :Type (qualified-name (:ToRole attrs) schema-ns)))
           qualified-type (:qualified-name type-map)]
       (when (include-element? config qualified-type)
         (if (:collection type-map)

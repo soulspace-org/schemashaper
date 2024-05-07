@@ -59,43 +59,50 @@
 
 (defn model-fields->graphql-fields
   "Renders the GraphQL fields for the model fields in `coll`."
-  [indent coll]
-  (->> coll
-       (filter #(contains? #{:field} (:el %)))
-       (map (partial model->graphql (+ 2 indent)))
-       (str/join "\n")))
+  ([indent coll]
+   (->> coll
+        (filter #(contains? #{:field} (:el %)))
+        (map (partial model->graphql (+ 2 indent)))
+        (str/join "\n"))))
 
 (defn model-enum-values->graphql-enum-values
   "Renders the GraphQL enum values for the model enum values in `coll`."
-  [indent coll]
-  (->> coll
-       (filter #(contains? #{:enum-value} (:el %)))
-       (map (partial model->graphql (+ 2 indent)))
-       (str/join "\n")))
+  ([indent coll]
+   (->> coll
+        (filter #(contains? #{:enum-value} (:el %)))
+        (map (partial model->graphql (+ 2 indent)))
+        (str/join "\n"))))
 
 (defmethod model->graphql :field
-  [indent e]
-  (str (render-indent indent) (:name e) ": " (model-type->graphql-type e)))
+  ([indent e]
+   (str (render-indent indent) (:name e) ": " (model-type->graphql-type e))))
 
 (defmethod model->graphql :class
-  [indent e]
-  (str (render-indent indent)
-       "type " (:name e) " {\n"
-       (model-fields->graphql-fields indent (:ct e))
-       "\n" (render-indent indent)
-       "}\n"))
+  ([indent e]
+   (str (render-indent indent)
+        "type " (:name e) " {\n"
+        (model-fields->graphql-fields indent (:ct e))
+        "\n" (render-indent indent)
+        "}\n")))
 
 (defmethod model->graphql :enum-value
-  [indent e]
-  (str (render-indent indent) (:name e)))
+  ([indent e]
+   (str (render-indent indent) (:name e))))
 
 (defmethod model->graphql :enum
-  [indent e]
-  (str (render-indent indent)
-       "enum " (:name e) " {\n"
-       (model-enum-values->graphql-enum-values indent (:ct e))
-       "\n" (render-indent indent)
-       "}\n"))
+  ([indent e]
+   (str (render-indent indent)
+        "enum " (:name e) " {\n"
+        (model-enum-values->graphql-enum-values indent (:ct e))
+        "\n" (render-indent indent)
+        "}\n")))
+
+
+(defmethod model->graphql :namespace
+  ([indent e]
+   (->> (:ct e)
+        (map (partial model->graphql indent))
+        (str/join "\n"))))
 
 ;;
 ;; Conversion to GraphQL schema
@@ -107,9 +114,9 @@
    (println "model->schema")
    (let [query (->> coll
                     (map (partial model->graphql 0))
-                    (partial str/join "\n")
+                    (str/join "\n")
                     )]
-     query)))
+     (str query))))
 
 (comment "Conversion tests"
   (def input #{{:el :class

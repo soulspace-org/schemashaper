@@ -6,8 +6,7 @@
 
 
 (def supported-schemas
-  #{:avro :edmx :overarch :proto})
-
+  #{:avro :edmx :graphql :openapi :overarch :proto})
 
 (defn adapter
   "Returns the adapter."

@@ -1,5 +1,6 @@
 (ns org.soulspace.schemashaper.adapter.ui.cli
-  (:require [clojure.string :as str]
+  (:require [clojure.edn :as edn]
+            [clojure.string :as str]
             [clojure.data.json :as json]
             [clojure.data.xml :as xml]
             [clojure.tools.cli :as cli]
@@ -17,8 +18,7 @@
             [org.soulspace.schemashaper.adapter.output.overarch :as overarch-out]
             [org.soulspace.schemashaper.adapter.output.protobuf :as proto-out]
             [org.soulspace.schemashaper.adapter.output.graphql :as graphql-out]
-            [org.soulspace.schemashaper.adapter.output.openapi :as openapi-out]
-            [clojure.edn :as edn])
+            [org.soulspace.schemashaper.adapter.output.openapi :as openapi-out])
   (:gen-class))
 
 (def appname "schemashaper")
@@ -123,6 +123,9 @@
 
   (conv/schema->model :edmx (slurp "examples/sap-sample-edmx.xml"))
 
-  (-main "-i" "dev/sap-sample-edmx.xml" "-o" "sap-sample-edmx.json" "--debug")
+  (-main)
+  (-main "-i" "examples/sap-sample-edmx.xml" "-o" "sap-sample-edmx.json" "--debug")
+  (-main "-i" "examples/sap-sample-edmx.xml" "-O" "overarch" "-o" "sap-sample.edn" "--debug")
+  (-main "-i" "examples/sap-sample-edmx.xml" "-O" "graphql" "-o" "sap-sample.graphql" "--debug")
   ;
   )

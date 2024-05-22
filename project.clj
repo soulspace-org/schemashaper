@@ -12,15 +12,7 @@
   :plugins [[com.github.liquidz/antq "RELEASE"]]
    ;; optional - you can add antq options here:
   :antq {}
-
   
-  :profiles {:dev {:dependencies [[djblue/portal "0.55.1"]
-                                  [criterium/criterium "0.4.6"]
-                                  [com.clojure-goes-fast/clj-java-decompiler "0.3.4"]
-                                  ; [expound/expound "0.9.0"]
-                                  ]
-                   :global-vars {*warn-on-reflection* true}}}
-
   :uberjar-name "schemashaper.jar"
   :main org.soulspace.schemashaper.adapter.ui.cli
 

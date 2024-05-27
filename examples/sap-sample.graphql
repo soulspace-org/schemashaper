@@ -1,0 +1,57 @@
+type Event {
+  EventID: Int!
+  Description: String
+  Name: String
+  Type: String
+  Country: String
+  Features: ODataAPI.Feature
+  Sessions: ODataAPI.Session
+  Theme: ODataAPI.GlobalTheme
+  Tracks: ODataAPI.Track
+}
+
+type Session {
+  SessionID: Int!
+  Description: String
+  EventID: Int
+  Title: String
+  Track: ODataAPI.Track
+  Event: ODataAPI.Event
+}
+
+type Track {
+  DisplayColor: String
+  EventID: Int
+  Name: String
+  TrackID: Int!
+}
+
+type User {
+  Company: String
+  FirstName: String
+  LastName: String
+  UserID: String!
+  Events: ODataAPI.Event
+}
+
+type UserSessionAgenda {
+  EventID: Int
+  Notes: String
+  Priority: Int
+  SessionID: Int!
+  UserID: String
+  Session: ODataAPI.Session
+}
+
+type Feature {
+  FeatureID: Int!
+  Name: String
+  Status: String
+}
+
+type GlobalTheme {
+  DisplayName: String
+  SystemTheme: Boolean
+  ThemeCode: String
+  ThemeID: Int!
+}

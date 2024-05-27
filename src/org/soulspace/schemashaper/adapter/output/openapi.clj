@@ -30,13 +30,13 @@
   "Renders the OpenAPI representation of the model element `e`."
   model/element-type)
 
+(defmethod model->openapi :field
+  [e])
+
 (defmethod model->openapi :class
   [e])
 
 (defmethod model->openapi :enum
-  [e])
-
-(defmethod model->openapi :field
   [e])
 
 (defmethod model->openapi :enum-value
@@ -52,3 +52,30 @@
    (->> coll
         ;TODO implement
         )))
+
+(comment
+  (def input #{{:el :class
+                :id :test/card
+                :name "Card"
+                :desc "Card in a card game."
+                :ct [{:el :field
+                      :name "id"
+                      :type ":uuid"}
+                     {:el :field
+                      :name "colour"
+                      :type "CardColour"}]}
+               {:el :enum
+                :id :test/card-colour
+                :name "CardColour"
+                :desc "Colour of the card."
+                :ct [{:el :enum-value
+                      :name "CLUBS"}
+                     {:el :enum-value
+                      :name "SPADES"}
+                     {:el :enum-value
+                      :name "HEART"}
+                     {:el :enum-value
+                      :name "DIAMONDS"}]}})
+  (conv/model->schema :openapi input)
+  ;
+  )

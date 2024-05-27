@@ -152,6 +152,31 @@
         (json/write-str))))
 
 (comment
+  (def input #{{:el :class
+                :id :test/card
+                :name "Card"
+                :desc "Card in a card game."
+                :ct [{:el :field
+                      :name "id"
+                      :type ":uuid"}
+                     {:el :field
+                      :name "colour"
+                      :type "CardColour"}]}
+               {:el :enum
+                :id :test/card-colour
+                :name "CardColour"
+                :desc "Colour of the card."
+                :ct [{:el :enum-value
+                      :name "CLUBS"}
+                     {:el :enum-value
+                      :name "SPADES"}
+                     {:el :enum-value
+                      :name "HEART"}
+                     {:el :enum-value
+                      :name "DIAMONDS"}]}})
+ 
+  (conv/model->schema :avro input)
+
   (json/read-str (slurp "examples/sap-sample-avro.json") :key-fn keyword)
   (vector? (:uuid types->avro))
   (vector? (:date types->avro))

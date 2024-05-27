@@ -132,6 +132,7 @@
 
 (comment
   (json/read-str (slurp "examples/sap-sample-avro.json") :key-fn keyword)
+  (conv/schema->model :avro (slurp "examples/sap-sample-avro.json"))
   (model-type {:type {:type "long" :logical-type "local-timestamp-millis"}})
   (base-type {:type ["null" {:type "long" :logical-type "local-timestamp-millis"}]})
   (optional? {:name "Notes", :type ["null" "string"]})
